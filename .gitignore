@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.env
+.venv/
+venv/
+*.jsonl
+/tmp/
+.DS_Store
+node_modules/
+dump.pm2

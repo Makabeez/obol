@@ -1,0 +1,12 @@
+# Obol runtime
+pyyaml>=6.0
+numpy>=1.26
+scipy>=1.11
+fastapi>=0.110
+uvicorn>=0.27
+
+# optional: Anthropic-only eval scorer (wallet-adjacent -> never a 3rd-party LLM)
+# anthropic>=0.40
+
+# dev
+pytest>=8.0

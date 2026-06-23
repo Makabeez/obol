@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Obol — the agent that spends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    /* the money-changer's table: oxidized-bronze patina, struck-coin gold, parchment ink */
+    --patina-0:#081413;      /* deepest shadow on the bronze */
+    --patina-1:#0c1c1a;      /* surface */
+    --patina-2:#11241f;      /* raised panel */
+    --line:#1d352e;          /* hairline */
+    --gold:#caa253;          /* the struck coin */
+    --gold-dim:#8a7740;
+    --ink:#ece6d6;           /* parchment text */
+    --ink-dim:#9fb0a4;       /* muted */
+    --verdigris:#4fb39a;     /* live / delivered */
+    --oxide:#c45a40;         /* retired / rug */
+    --radius:0;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:
+      radial-gradient(1200px 500px at 80% -10%, #11302a 0%, transparent 60%),
+      var(--patina-1);
+    color:var(--ink);
+    font-family:"Spline Sans Mono",ui-monospace,monospace;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  a{color:var(--gold);text-decoration:none;border-bottom:1px solid var(--gold-dim)}
+  a:hover{color:var(--ink)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+  /* ---- coin legend wordmark ---- */
+  header{padding:54px 0 30px;border-bottom:1px solid var(--line)}
+  .legend{display:flex;align-items:baseline;gap:18px;flex-wrap:wrap}
+  .mark{
+    font-family:"Fraunces",serif;font-weight:900;
+    font-size:clamp(56px,11vw,120px);line-height:.86;letter-spacing:.16em;
+    color:var(--gold);text-transform:uppercase;
+    text-shadow:0 1px 0 #1a1410, 0 0 38px rgba(202,162,83,.12);
+  }
+  .thesis{font-family:"Fraunces",serif;font-weight:400;font-size:clamp(18px,2.4vw,26px);
+    color:var(--ink);max-width:30ch;font-style:italic}
+  .sub{margin-top:14px;color:var(--ink-dim);font-size:13px;letter-spacing:.02em;max-width:74ch}
+  .sub b{color:var(--ink);font-weight:600}
+
+  /* ---- the budget: a draining purse ---- */
+  .frame{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;padding:30px 0;
+    border-bottom:1px solid var(--line)}
+  @media(max-width:760px){.frame{grid-template-columns:1fr}}
+  .panel{background:linear-gradient(180deg,var(--patina-2),var(--patina-0));
+    border:1px solid var(--line);padding:20px 22px}
+  .eyebrow{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold-dim)}
+  .purse-fig{display:flex;align-items:baseline;gap:10px;margin-top:10px}
+  .purse-fig .big{font-family:"Fraunces",serif;font-weight:600;font-size:46px;color:var(--ink)}
+  .purse-fig .unit{color:var(--ink-dim);font-size:13px}
+  .meter{height:10px;background:#0a1715;border:1px solid var(--line);margin-top:16px;position:relative;overflow:hidden}
+  .meter > i{display:block;height:100%;background:
+    repeating-linear-gradient(90deg,var(--gold) 0 2px,#b4923f 2px 7px);
+    width:100%;transition:width .5s ease}
+  .meterrow{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;color:var(--ink-dim)}
+  .stat3{display:flex;gap:26px;margin-top:18px;flex-wrap:wrap}
+  .stat3 div span{display:block;font-size:11px;color:var(--ink-dim);letter-spacing:.06em}
+  .stat3 div b{font-family:"Fraunces",serif;font-size:24px;font-weight:600}
+  .verd{color:var(--verdigris)}
+
+  /* ---- the spend tape: signature element ---- */
+  .tape-wrap{padding:26px 0 60px}
+  .tape-head{display:flex;justify-content:space-between;align-items:end;margin-bottom:14px}
+  .tape-head h2{font-family:"Fraunces",serif;font-weight:600;font-size:22px;margin:0;letter-spacing:.01em}
+  .live{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:var(--verdigris);
+    letter-spacing:.16em;text-transform:uppercase}
+  .live i{width:7px;height:7px;border-radius:50%;background:var(--verdigris);
+    box-shadow:0 0 0 0 rgba(79,179,154,.6);animation:pulse 1.8s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(79,179,154,.55)}70%{box-shadow:0 0 0 9px rgba(79,179,154,0)}100%{box-shadow:0 0 0 0 rgba(79,179,154,0)}}
+
+  .tape{border-top:1px solid var(--line)}
+  .row{display:grid;grid-template-columns:14px 1fr auto auto auto;gap:14px;align-items:center;
+    padding:11px 4px;border-bottom:1px solid var(--line);font-size:13px;
+    animation:strike .5s ease both}
+  @keyframes strike{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .coin{width:14px;height:14px;border-radius:50%;border:1px solid var(--gold-dim);
+    background:radial-gradient(circle at 35% 30%,var(--gold),#7c6a39);position:relative}
+  .coin.bad{background:radial-gradient(circle at 35% 30%,#7a3b2e,#3a1f18);border-color:var(--oxide)}
+  .who{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .who small{color:var(--ink-dim)}
+  .paid{color:var(--gold);font-variant-numeric:tabular-nums}
+  .q{font-variant-numeric:tabular-nums;color:var(--ink-dim)}
+  .q b{color:var(--verdigris)}
+  .q.bad b{color:var(--oxide)}
+  .ex{font-size:11px}
+  .note{padding:12px 4px;color:var(--ink-dim);font-size:12px;border-bottom:1px solid var(--line)}
+  .note.retire{color:var(--oxide)}
+  .note.rep{color:var(--gold-dim)}
+
+  /* ---- reputation ledger ---- */
+  .rep{padding:30px 0 70px;border-top:1px solid var(--line)}
+  .rep h2{font-family:"Fraunces",serif;font-weight:600;font-size:22px;margin:0 0 16px}
+  .bar{display:grid;grid-template-columns:180px 1fr 88px;gap:14px;align-items:center;
+    padding:9px 0;font-size:13px}
+  .bar .name{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar .name.dead{color:var(--oxide);text-decoration:line-through;text-decoration-color:var(--oxide)}
+  .track{height:8px;background:#0a1715;border:1px solid var(--line);position:relative}
+  .track > i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));transition:width .6s ease}
+  .track.dead > i{background:var(--oxide);opacity:.5}
+  .score{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-dim)}
+  footer{border-top:1px solid var(--line);padding:26px 0 60px;color:var(--ink-dim);font-size:12px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  @media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="legend">
+    <div class="mark">Obol</div>
+    <div class="thesis">The agent that spends.</div>
+  </div>
+  <p class="sub">Every team here is building a <b>seller</b>. Obol is the <b>buyer</b> — an autonomous
+  agent with a USDC budget that discovers paid services, pays each per call on Arc, scores what it
+  gets, and reallocates toward the ones that deliver. It learns who's worth paying, and cuts the rest.</p>
+</div></header>
+
+<div class="wrap">
+  <section class="frame">
+    <div class="panel">
+      <div class="eyebrow">The purse · live</div>
+      <div class="purse-fig"><span class="big" id="bal">—</span><span class="unit">USDC remaining</span></div>
+      <div class="meter"><i id="meter"></i></div>
+      <div class="meterrow"><span id="spent">spent 0</span><span id="budget">of 0</span></div>
+      <div class="stat3">
+        <div><span>paid calls</span><b id="calls">0</b></div>
+        <div><span>value captured</span><b class="verd" id="value">0</b></div>
+        <div><span>value / USDC</span><b id="vpu">0</b></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="eyebrow">What it's deciding</div>
+      <p class="sub" style="margin-top:10px">Selection is Thompson sampling on <i>value-per-USDC</i>:
+      sample each provider's likely quality, divide by its price, buy from the best draw. Cheap-but-unproven
+      services get probed; proven-cheap ones get exploited; a provider that confidently underdelivers —
+      or is just overpriced — gets <span style="color:var(--oxide)">retired</span>. No human in the loop.</p>
+    </div>
+  </section>
+
+  <section class="tape-wrap">
+    <div class="tape-head">
+      <h2>The spend tape</h2>
+      <span class="live"><i></i>settling on Arc</span>
+    </div>
+    <div class="tape" id="tape"></div>
+  </section>
+
+  <section class="rep">
+    <h2>Reputation ledger</h2>
+    <div id="rep"></div>
+    <p class="sub" style="margin-top:14px">Delivered-quality score, 0–100. Written on-chain to
+    <code style="color:var(--ink)">ReputationRegistry</code> as Obol spends — a public good any other
+    agent can read before paying. Struck-through means retired.</p>
+  </section>
+
+  <footer>
+    <span>Obol · Lepton Agents Hackathon · Canteen × Circle on Arc</span>
+    <span id="mode">sim — self-driving demo</span>
+  </footer>
+</div>
+
+<script>
+const fmt = (n,d=4)=> Number(n||0).toFixed(d);
+const seen = new Set();
+
+function render(state){
+  const s = state.summary||{};
+  if (s.budget){
+    document.getElementById('bal').textContent = fmt(s.balance,4);
+    document.getElementById('budget').textContent = 'of '+fmt(s.budget,2);
+    document.getElementById('spent').textContent = 'spent '+fmt(s.spend,4);
+    const pct = Math.max(0, Math.min(100, 100*(s.balance/s.budget)));
+    document.getElementById('meter').style.width = pct+'%';
+    document.getElementById('value').textContent = fmt(s.value,2);
+    const vpu = s.spend>0 ? (s.value/s.spend) : 0;
+    document.getElementById('vpu').textContent = fmt(vpu,1);
+  }
+  // tape
+  const tape = document.getElementById('tape');
+  const evs = state.events||[];
+  let calls = 0;
+  for (const ev of evs){ if (ev.kind==='buy') calls++; }
+  document.getElementById('calls').textContent = calls;
+
+  // only append new events (keep DOM stable / animated)
+  for (let i=evs.length-1; i>=0; i--){
+    const ev = evs[i];
+    const key = ev.kind+'|'+ev.ts+'|'+(ev.tx||ev.provider||'');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const node = document.createElement('div');
+    if (ev.kind==='buy'){
+      const bad = !ev.delivered;
+      node.className='row';
+      node.innerHTML =
+        `<span class="coin ${bad?'bad':''}"></span>`+
+        `<span class="who">${ev.provider} <small>· ${(ev.query||'')}</small></span>`+
+        `<span class="paid">−${fmt(ev.paid,4)}</span>`+
+        `<span class="q ${bad?'bad':''}">q <b>${bad?'fail':fmt(ev.quality,2)}</b></span>`+
+        `<span class="ex"><a href="${ev.explorer||'#'}" target="_blank" rel="noopener">${(ev.tx||'').slice(0,10)}…</a></span>`;
+    } else if (ev.kind==='retire'){
+      node.className='note retire'; node.textContent = `✕ cut ${ev.provider} — ${ev.reason}`;
+    } else if (ev.kind==='reputation'){
+      node.className='note rep'; node.textContent = `~ on-chain score ${ev.provider} = ${ev.score_bps}/10000`;
+    } else if (ev.kind==='start'){
+      node.className='note'; node.textContent = `— new session · budget ${fmt(ev.budget,2)} USDC across ${ev.providers} providers —`;
+    } else continue;
+    tape.prepend(node);
+  }
+  while (tape.children.length > 80) tape.removeChild(tape.lastChild);
+
+  // reputation bars
+  const rep = document.getElementById('rep');
+  const provs = s.providers||{};
+  const rows = Object.entries(provs).map(([id,p])=>({id,...p}))
+    .sort((a,b)=> (b.edge||0)-(a.edge||0));
+  rep.innerHTML = rows.map(p=>{
+    const q = p.calls>0 ? (p.value/p.calls) : 0;
+    const dead = p.drops>0 && (q < 0.3) && p.calls>3;
+    const w = Math.max(2, Math.min(100, q*100));
+    return `<div class="bar"><span class="name ${dead?'dead':''}">${p.name}</span>`+
+      `<span class="track ${dead?'dead':''}"><i style="width:${w}%"></i></span>`+
+      `<span class="score">${Math.round(q*100)} · ${p.calls}×</span></div>`;
+  }).join('');
+}
+
+async function tick(){
+  try{
+    const r = await fetch('/api/state',{cache:'no-store'});
+    render(await r.json());
+  }catch(e){/* server starting */}
+}
+tick(); setInterval(tick, 600);
+</script>
+</body>
+</html>

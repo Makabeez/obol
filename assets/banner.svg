@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="Obol — the agent that spends">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0c1c1a"/>
+      <stop offset="1" stop-color="#081413"/>
+    </linearGradient>
+    <radialGradient id="coin" cx="38%" cy="32%" r="75%">
+      <stop offset="0" stop-color="#e7c777"/>
+      <stop offset="55%" stop-color="#caa253"/>
+      <stop offset="100%" stop-color="#7c6a39"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#caa253" stop-opacity="0.30"/>
+      <stop offset="100%" stop-color="#caa253" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      .legend{font-family:Georgia,'Times New Roman',serif;fill:#caa253;font-weight:900;letter-spacing:18px}
+      .thesis{font-family:Georgia,serif;fill:#ece6d6;font-style:italic;font-size:26px}
+      .meta{font-family:ui-monospace,'SF Mono',Menlo,monospace;fill:#9fb0a4;font-size:13px;letter-spacing:2px}
+      .tick{font-family:ui-monospace,monospace;fill:#caa253;font-size:12px}
+    </style>
+  </defs>
+
+  <rect width="1200" height="300" fill="url(#bg)"/>
+  <!-- hairline frame -->
+  <rect x="0.5" y="0.5" width="1199" height="299" fill="none" stroke="#1d352e"/>
+
+  <!-- struck coin, pulsing like a payment settling -->
+  <g transform="translate(150,150)">
+    <circle r="92" fill="url(#glow)">
+      <animate attributeName="r" values="78;100;78" dur="2.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="2.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle r="64" fill="url(#coin)" stroke="#7c6a39" stroke-width="2"/>
+    <circle r="54" fill="none" stroke="#7c6a39" stroke-width="1" opacity="0.55"/>
+    <!-- lambda: the lepton/obol mark -->
+    <text x="0" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="64"
+          font-weight="700" fill="#5a4a25">&#923;</text>
+    <!-- a small coin "dropping" into the purse, repeating -->
+    <circle cx="0" cy="-110" r="9" fill="url(#coin)" opacity="0">
+      <animate attributeName="cy" values="-110;120" dur="1.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.1;0.85;1" dur="1.6s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- wordmark + thesis -->
+  <text x="300" y="138" class="legend" font-size="84">OBOL</text>
+  <text x="306" y="178" class="thesis">the agent that spends.</text>
+  <text x="308" y="214" class="meta">AUTONOMOUS BUYER &#183; x402 NANOPAYMENTS &#183; ARC &#215; CIRCLE</text>
+
+  <!-- draining purse meter -->
+  <g transform="translate(308,236)">
+    <rect x="0" y="0" width="520" height="9" fill="#0a1715" stroke="#1d352e"/>
+    <rect x="0" y="0" height="9" fill="#caa253">
+      <animate attributeName="width" values="520;120;520" dur="6s" repeatCount="indefinite"/>
+    </rect>
+    <text x="532" y="9" class="tick">USDC</text>
+  </g>
+</svg>

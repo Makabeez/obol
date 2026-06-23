@@ -1,0 +1,4 @@
+providers:
+  - { id: alpha,  name: AlphaFeed,  url: "http://mock/alpha",  price_usdc: 0.002, kind: data }
+  - { id: oracle, name: DeepOracle, url: "http://mock/oracle", price_usdc: 0.010, kind: data }
+  - { id: rug,    name: RugSeller,  url: "http://mock/rug",    price_usdc: 0.001, kind: data }

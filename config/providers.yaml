@@ -1,0 +1,82 @@
+# Obol provider registry.
+#
+# Each entry is an x402-protected service the agent can discover and pay.
+# For LIVE runs, set `url` to a real Arc x402 endpoint and delete the `_sim_*` fields.
+# The `_sim_*` fields are ground truth used ONLY by the simulator -- the agent never
+# reads them. They let us prove the bandit actually learns who's worth paying.
+#
+# The mix below is deliberately adversarial: a cheap gem, an expensive-but-excellent
+# source, a couple of mediocre ones, an overpriced dud, and an outright scammer that
+# takes payment and returns nothing. A good buyer agent should converge on the first
+# two and starve the rest.
+
+providers:
+  # ---- LIVE example (uncomment for --live, point at a real x402 endpoint) ----
+  # The first real counterparty is the Circle reference seller (circlefin/arc-nanopayments),
+  # then append each cross-team endpoint you find in the Canteen / Arc Discords.
+  # - id: circle-ref-quote
+  #   name: Circle Reference Quote
+  #   url: http://localhost:3000/api/premium/quote   # or a teammate's deployed URL
+  #   kind: market-data
+  #   price_usdc: 0.001
+  #   tags: [data, reference]
+
+  - id: alpha-feed
+    name: AlphaFeed (cheap gem)
+    url: sim://alpha-feed
+    kind: market-data
+    price_usdc: 0.002
+    tags: [data, prices]
+    _sim_quality_mean: 0.82
+    _sim_quality_spread: 0.08
+    _sim_dropout: 0.02
+
+  - id: deep-oracle
+    name: DeepOracle (premium)
+    url: sim://deep-oracle
+    kind: market-data
+    price_usdc: 0.010
+    tags: [data, depth]
+    _sim_quality_mean: 0.93
+    _sim_quality_spread: 0.05
+    _sim_dropout: 0.00
+
+  - id: midwit-api
+    name: MidwitAPI (meh)
+    url: sim://midwit-api
+    kind: market-data
+    price_usdc: 0.004
+    tags: [data]
+    _sim_quality_mean: 0.48
+    _sim_quality_spread: 0.18
+    _sim_dropout: 0.05
+
+  - id: fee-trap
+    name: FeeTrap (overpriced)
+    url: sim://fee-trap
+    kind: market-data
+    price_usdc: 0.020
+    tags: [data]
+    _sim_quality_mean: 0.55
+    _sim_quality_spread: 0.12
+    _sim_dropout: 0.05
+
+  - id: noise-vendor
+    name: NoiseVendor (low quality)
+    url: sim://noise-vendor
+    kind: market-data
+    price_usdc: 0.003
+    tags: [data]
+    _sim_quality_mean: 0.30
+    _sim_quality_spread: 0.15
+    _sim_dropout: 0.10
+
+  - id: rug-seller
+    name: RugSeller (takes money, no delivery)
+    url: sim://rug-seller
+    kind: market-data
+    price_usdc: 0.001
+    tags: [data]
+    _sim_quality_mean: 0.40
+    _sim_quality_spread: 0.20
+    _sim_dropout: 0.85

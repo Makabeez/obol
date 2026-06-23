@@ -1,0 +1,19 @@
+providers:
+  - id: archer-signal
+    name: Archer Signal (Bot Mechanic)
+    url: https://quiver-self.vercel.app/api/archer/signal
+    kind: market-data
+    price_usdc: 0.001134
+    tags: [data, real, hackathon]
+  - id: archer-market-state
+    name: Archer Market State (Bot Mechanic)
+    url: https://quiver-self.vercel.app/api/archer/market-state
+    kind: market-data
+    price_usdc: 0.001
+    tags: [data, real, hackathon]
+  - id: archer-compute
+    name: Archer Compute (Bot Mechanic)
+    url: https://quiver-self.vercel.app/api/archer/compute
+    kind: compute
+    price_usdc: 0.002
+    tags: [compute, real, hackathon]

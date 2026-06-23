@@ -1,0 +1,16 @@
+{
+  "name": "obol-sidecar",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Obol's chain gateway: holds the agent wallet, executes x402 nanopayments via Circle Gateway, and writes reputation tx on Arc. The Python brain calls this over localhost so it never touches a key.",
+  "scripts": {
+    "start": "node payer.mjs",
+    "deploy-registry": "node deploy-registry.mjs",
+    "check": "node --check payer.mjs && node --check deploy-registry.mjs"
+  },
+  "dependencies": {
+    "@circle-fin/x402-batching": "^3.2.0",
+    "viem": "^2.21.0"
+  }
+}
