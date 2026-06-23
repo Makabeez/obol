@@ -43,7 +43,7 @@ class SimArcAdapter(ArcAdapter):
             provider_id=provider.id,
             amount_usdc=price,
             settled=True,
-            explorer_url="https://explorer.arc.network/tx/sim",
+            explorer_url="",  # sim tx is not real -> no explorer link
         )
 
         # Seller behaviour (hidden from the agent).
@@ -64,6 +64,6 @@ class SimArcAdapter(ArcAdapter):
     def write_reputation(self, provider_id: str, score_bps: int, calls: int = 0,
                          retire: bool = False) -> PaymentReceipt:
         r = PaymentReceipt(self._tx(), provider_id, 0.0, settled=True,
-                           explorer_url="https://explorer.arc.network/tx/sim")
+                           explorer_url="")  # sim tx is not real -> no explorer link
         self._rep_writes.append(r)
         return r

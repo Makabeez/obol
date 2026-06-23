@@ -96,6 +96,7 @@
   .q b{color:var(--verdigris)}
   .q.bad b{color:var(--oxide)}
   .ex{font-size:11px}
+  .simtx{color:var(--ink-dim);opacity:.55;font-size:11px}
   .note{padding:12px 4px;color:var(--ink-dim);font-size:12px;border-bottom:1px solid var(--line)}
   .note.retire{color:var(--oxide)}
   .note.rep{color:var(--gold-dim)}
@@ -111,6 +112,10 @@
   .track > i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold));transition:width .6s ease}
   .track.dead > i{background:var(--oxide);opacity:.5}
   .score{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink-dim)}
+  .proof{padding:24px 0 8px;border-top:1px solid var(--line)}
+  .proofgrid{display:flex;gap:22px;flex-wrap:wrap;margin-top:12px}
+  .proofgrid a{font-size:13px;color:var(--gold);border-bottom:1px solid var(--gold-dim);padding-bottom:2px}
+  .proofgrid a:hover{color:var(--ink)}
   footer{border-top:1px solid var(--line);padding:26px 0 60px;color:var(--ink-dim);font-size:12px;
     display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
   @media(prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
@@ -165,9 +170,20 @@
     agent can read before paying. Struck-through means retired.</p>
   </section>
 
+  <section class="proof">
+    <div class="eyebrow">Real, on Arc testnet · verifiable</div>
+    <p class="sub" style="margin-top:10px">The tape above is a self-driving simulation of the decision engine.
+    The on-chain artifacts below are real — Obol deployed this contract and wrote these scores itself:</p>
+    <div class="proofgrid">
+      <a href="https://testnet.arcscan.app/address/0xd893680122269b8127dea0e8ffe00d5bdafe9d70" target="_blank" rel="noopener">ReputationRegistry contract ↗</a>
+      <a href="https://testnet.arcscan.app/tx/0x883706f4708c046cd5043c560ad55519ad75a09d63aa9ded9cf782007cd3f6cc" target="_blank" rel="noopener">On-chain reputation write (real seller) ↗</a>
+      <a href="https://github.com/Makabeez/obol" target="_blank" rel="noopener">Source (MIT) ↗</a>
+    </div>
+  </section>
+
   <footer>
     <span>Obol · Lepton Agents Hackathon · Canteen × Circle on Arc</span>
-    <span id="mode">sim — self-driving demo</span>
+    <span id="mode">sim engine · real contract on Arc</span>
   </footer>
 </div>
 
@@ -204,12 +220,15 @@ function render(state){
     if (ev.kind==='buy'){
       const bad = !ev.delivered;
       node.className='row';
+      const txCell = ev.explorer
+        ? `<a href="${ev.explorer}" target="_blank" rel="noopener">${(ev.tx||'').slice(0,10)}…</a>`
+        : `<span class="simtx" title="simulated — not an on-chain tx">${(ev.tx||'').slice(0,8)}… sim</span>`;
       node.innerHTML =
         `<span class="coin ${bad?'bad':''}"></span>`+
         `<span class="who">${ev.provider} <small>· ${(ev.query||'')}</small></span>`+
         `<span class="paid">−${fmt(ev.paid,4)}</span>`+
         `<span class="q ${bad?'bad':''}">q <b>${bad?'fail':fmt(ev.quality,2)}</b></span>`+
-        `<span class="ex"><a href="${ev.explorer||'#'}" target="_blank" rel="noopener">${(ev.tx||'').slice(0,10)}…</a></span>`;
+        `<span class="ex">${txCell}</span>`;
     } else if (ev.kind==='retire'){
       node.className='note retire'; node.textContent = `✕ cut ${ev.provider} — ${ev.reason}`;
     } else if (ev.kind==='reputation'){
