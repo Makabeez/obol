@@ -1,0 +1,68 @@
+# Obol provider allowlist -- Arc mainnet (eip155:5042).
+#
+# The sidecar will ONLY pay providers listed here, addressed by `id`. `pay_to` is pinned
+# from each seller's live 402 challenge (decoded 2026-09-19): if a seller ever asks to be
+# paid somewhere else, the sidecar refuses. Re-check a seller's challenge before changing it:
+#   curl -s -D - -o /dev/null <url> | grep -i payment-required | cut -d' ' -f2 | base64 -d
+#
+# `price_usdc` is the advertised price; `price_usdc_max` is the most Obol will sign for.
+# `expect` drives the live evaluator: keys that must be present and non-empty in the JSON.
+# `fresh_block_key` (optional): JSON path to an Arc block number; the evaluator compares it
+# to the live chain head and penalises stale data.
+
+providers:
+  # ---- Exa (third party) -- web search, both Arc rails offered, Obol pays via EIP-3009 exact
+  - id: exa-search
+    name: Exa search
+    url: https://api.exa.ai/search
+    method: POST
+    body: { query: "Arc blockchain USDC news", numResults: 3, type: "auto" }
+    kind: search
+    price_usdc: 0.007
+    price_usdc_max: 0.008
+    pay_to: "0xB98eF29eb2be19Ae646A8FC0248255B90A332dbC"
+    expect: [results]
+    tags: [search, third-party, exact]
+
+  # ---- CRA AGENT (third party) -- Arc chain data, Circle Gateway batched only
+  - id: cra-fees-estimate
+    name: CRA AGENT fee estimate
+    url: https://api.cra-agent.tech/v1/paid/fees/estimate
+    kind: arc-data
+    price_usdc: 0.0005
+    price_usdc_max: 0.0006
+    pay_to: "0x33b37c6d7a98b58da3Ccb3F36A4b578053d0Ea74"
+    expect: []
+    tags: [arc-data, third-party, gateway]
+
+  - id: cra-fees-forecast
+    name: CRA AGENT base-fee forecast
+    url: https://api.cra-agent.tech/v1/paid/fees/forecast
+    kind: arc-data
+    price_usdc: 0.001
+    price_usdc_max: 0.0012
+    pay_to: "0x33b37c6d7a98b58da3Ccb3F36A4b578053d0Ea74"
+    expect: []
+    tags: [arc-data, third-party, gateway]
+
+  - id: cra-rpc-health
+    name: CRA AGENT RPC health
+    url: https://api.cra-agent.tech/v1/paid/rpc/health
+    kind: arc-data
+    price_usdc: 0.0005
+    price_usdc_max: 0.0006
+    pay_to: "0x33b37c6d7a98b58da3Ccb3F36A4b578053d0Ea74"
+    expect: []
+    tags: [arc-data, third-party, gateway]
+
+  # Always answers 500 and is never charged (by the seller's own design). Obol should
+  # record zero delivery and retire it -- at zero cost.
+  - id: cra-selftest-fail
+    name: CRA AGENT self-test (always fails)
+    url: https://api.cra-agent.tech/v1/paid/selftest/fail
+    kind: arc-data
+    price_usdc: 0.001
+    price_usdc_max: 0.0012
+    pay_to: "0x33b37c6d7a98b58da3Ccb3F36A4b578053d0Ea74"
+    expect: []
+    tags: [arc-data, third-party, known-bad]

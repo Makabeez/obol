@@ -44,6 +44,8 @@ class Agent:
         self._by_id = {p.id: p for p in self.providers}
         self._call_count = 0
         self._rep_counter: dict[str, int] = {}
+        self._last_evidence: dict[str, str] = {}
+        self._written: dict[str, int] = {}  # provider -> calls at last on-chain write
 
     def _emit(self, kind: str, **data) -> None:
         if self.on_event:
@@ -58,12 +60,22 @@ class Agent:
 
         provider = self._by_id[arm.provider_id]
         result = self.adapter.pay_and_fetch(provider, request)
-        if not result.receipt.settled:
-            # Couldn't even pay (insufficient balance) -> stop.
-            return False
+        if result.refused or (not result.receipt.settled and result.body is None):
+            # WE could not pay (budget, caps, funds, policy) -- not the seller's fault.
+            # Park this provider for the rest of the run (local only, nothing on-chain);
+            # stop when nothing payable is left.
+            self.bandit.arms[provider.id].retired = True
+            self._emit("skip", provider=provider.name, reason=result.evidence or "unpaid")
+            return any(not a.retired for a in self.bandit.arms.values())
 
-        quality = evaluate(request, result.body, self.settings.eval_model)
+        # Paid call, or a seller-side failure the seller did not charge for (e.g. HTTP 500):
+        # both are real observations of the seller's delivery.
+        quality = evaluate(request, result.body, self.settings.eval_model,
+                           provider=provider, latency_ms=result.latency_ms)
         delivered = result.body is not None and result.body.get("data") is not None
+        if result.evidence and (result.receipt.settled or provider.id not in self._last_evidence
+                                or not self._last_evidence[provider.id].startswith(("0x", "gateway:"))):
+            self._last_evidence[provider.id] = result.evidence
         self.bandit.observe(arm.provider_id, quality, result.receipt.amount_usdc, delivered=delivered)
         self._call_count += 1
 
@@ -98,14 +110,18 @@ class Agent:
         if n % self.rep_write_every == 0:
             score = self.bandit.quality_bps(provider.id)
             calls = self.bandit.arms[provider.id].calls
-            rc = self.adapter.write_reputation(provider.id, score, calls=calls)
+            rc = self.adapter.write_reputation(provider.id, score, calls=calls,
+                                               evidence=self._last_evidence.get(provider.id, ""))
+            self._written[provider.id] = calls
             self._emit("reputation", provider=provider.name,
                        score_bps=score, tx=rc.tx_hash, explorer=rc.explorer_url)
 
         if self.bandit.arms[provider.id].retired:
             score = self.bandit.quality_bps(provider.id)
             calls = self.bandit.arms[provider.id].calls
-            rc = self.adapter.write_reputation(provider.id, score, calls=calls, retire=True)
+            rc = self.adapter.write_reputation(provider.id, score, calls=calls, retire=True,
+                                               evidence=self._last_evidence.get(provider.id, ""))
+            self._written[provider.id] = -1  # retired: final
             self._emit("retire", provider=provider.name,
                        reason="delivery below floor with confidence",
                        tx=rc.tx_hash, explorer=rc.explorer_url)
@@ -118,7 +134,22 @@ class Agent:
         while self._call_count < self.settings.max_calls:
             if not self.step(request_factory()):
                 break
+        self.flush_reputation()
         return self.summary()
+
+    def flush_reputation(self) -> None:
+        """Publish a final score for every provider observed this run whose on-chain record
+        is missing or stale, so each seller Obol actually tried ends up recorded."""
+        for pid, arm in self.bandit.arms.items():
+            last = self._written.get(pid)
+            if arm.calls == 0 or last == -1 or last == arm.calls:
+                continue
+            score = self.bandit.quality_bps(pid)
+            rc = self.adapter.write_reputation(pid, score, calls=arm.calls,
+                                               evidence=self._last_evidence.get(pid, ""))
+            self._written[pid] = arm.calls
+            self._emit("reputation", provider=self._by_id[pid].name, score_bps=score,
+                       tx=rc.tx_hash, explorer=rc.explorer_url)
 
     def summary(self) -> dict:
         ranking = self.bandit.ranking()

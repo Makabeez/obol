@@ -8,10 +8,10 @@
 
 An autonomous agent with a USDC budget that discovers paid services, pays each per call on Arc, scores what it gets back, and reallocates its budget toward the ones that deliver — cutting off the ones that don't.
 
-[![Live Demo](https://img.shields.io/badge/live-demo-caa253?style=for-the-badge&labelColor=0c1c1a)](https://obol.example.xyz)
-[![Reputation Contract](https://img.shields.io/badge/contract-live%20on%20Arc-4fb39a?style=for-the-badge&labelColor=0c1c1a)](https://testnet.arcscan.app/address/0xd893680122269b8127dea0e8ffe00d5bdafe9d70)
+[![Live on Arc mainnet](https://img.shields.io/badge/live-Arc%20mainnet-caa253?style=for-the-badge&labelColor=0c1c1a)](https://obol-arc.vercel.app)
+[![Reputation Contract](https://img.shields.io/badge/registry-Arc%20mainnet-4fb39a?style=for-the-badge&labelColor=0c1c1a)](https://explorer.arc.io/address/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE)
 [![License](https://img.shields.io/badge/license-MIT-ece6d6?style=for-the-badge&labelColor=0c1c1a)](./LICENSE)
-[![Built on Arc](https://img.shields.io/badge/built%20on-Arc%20%C3%97%20Circle-c45a40?style=for-the-badge&labelColor=0c1c1a)](https://docs.arc.network)
+[![Built on Arc](https://img.shields.io/badge/built%20on-Arc%20%C3%97%20Circle-c45a40?style=for-the-badge&labelColor=0c1c1a)](https://docs.arc.io)
 
 ![Python](https://img.shields.io/badge/python-3.11-blue)
 ![x402](https://img.shields.io/badge/x402-pay--per--call-caa253)
@@ -20,21 +20,28 @@ An autonomous agent with a USDC budget that discovers paid services, pays each p
 
 </div>
 
-> Every economy mints a smallest coin. The Lepton round is full of teams building the **seller** side — paywalled endpoints, paid agent services, per-article tolls. Obol builds the hard side: the **buyer** that has to decide, on a budget, which of those services are actually worth paying for. It pays them in real test-USDC, keeps an on-chain record of who delivered, and lets that record steer the next coin it spends.
+> Every economy mints a smallest coin. Paid agent APIs are multiplying on Arc: HTTP 402, pay per call, USDC. The hard question is on the buyer's side: **which of them are worth paying?** Obol pays them for real on Arc mainnet, scores what they deliver, stops paying the ones that fail, and publishes each verdict, with the payment evidence attached, to an on-chain registry any other agent can read before it spends.
 
 ---
 
-## Live on Arc
-
-`ReputationRegistry` is deployed and Obol is writing to it on Arc testnet (chain `5042002`).
+## Live on Arc mainnet
 
 | | |
 |---|---|
-| ReputationRegistry | [`0xd893680122269b8127dea0e8ffe00d5bdafe9d70`](https://testnet.arcscan.app/address/0xd893680122269b8127dea0e8ffe00d5bdafe9d70) |
-| Deploy tx | [`0xfde6e531…2a6e16`](https://testnet.arcscan.app/tx/0xfde6e5316ae17880a37f04228ec80d60ae771645a9ad9e6da6590b9b5c2a6e16) |
-| First reputation write | [`0xf9f47a52…079d16`](https://testnet.arcscan.app/tx/0xf9f47a52cc1cebfd4adfd447446c66691ab2a683ba1287cc3e9549e6ae079d16) |
+| Dashboard (reads the chain in your browser) | https://obol-arc.vercel.app |
+| ReputationRegistry v2 | [`0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE`](https://explorer.arc.io/address/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE) |
+| Agent wallet | [`0x4a36Df350507d974C882Ac89f402215340d67f55`](https://explorer.arc.io/address/0x4a36Df350507d974C882Ac89f402215340d67f55) |
+| ERC-8004 identity | agent `#345` in the canonical IdentityRegistry `0x8004A169…a432` |
 
-The score reads back on-chain exactly as written — `scoreOf(keccak("alpha-feed"))` returns `scoreBps=8900, calls=42, retired=false`. Don't trust the agent; read its verdict off Arc.
+Obol pays real third-party sellers on Arc mainnet:
+
+- **Exa** web search: paid by EIP-3009 `exact` transfer, settled on Arc. The evidence stored with the score is the Arc tx hash.
+- **CRA AGENT** Arc chain data: paid through **Circle Gateway** batched payments. Obol checks the returned block height against the live Arc head, so stale data scores low.
+- **CRA self-test** (`/selftest/fail`): always answers HTTP 500 and never charges. Obol retires it on-chain after three free calls. That is the delivery gate working on a real endpoint at zero cost.
+
+Every registry write carries its evidence (`0x…` tx hash, `gateway:<transfer id>`, or `no-payment:http-<code>`), the provider's URL, and the block it was written in, so the dashboard and anyone else can find the exact write with a single-block query. No indexer, no backend.
+
+The Lepton (testnet) deployment `0xd893…9d70` remains on Arc testnet for history.
 
 ---
 
@@ -81,11 +88,12 @@ One seam — the **Arc adapter** — separates the brain from the chain. `SimArc
 | Allocation       | Thompson sampling over value-per-USDC (Beta posteriors) | Explore/exploit under a hard budget; the agency the rubric weights |
 | Adaptivity       | Evidence decay + epsilon re-exploration             | Re-evaluates a live market; tracks providers whose quality drifts |
 | Cut-off          | Delivery gate (non-decaying) + edge gate            | Retires scammers that take payment and return nothing; starves the merely-mediocre |
-| Payments         | Circle Agent Stack — Wallets, Gateway/Nanopayments, x402 | Sub-cent USDC settlement on Arc |
-| Settlement       | Arc testnet, USDC gas, sub-second finality          | Makes a per-call buy economical |
-| Reputation       | `ReputationRegistry.sol` (Arc)                       | Public, readable track record per provider |
+| Payments         | x402 v2 client with two rails: EIP-3009 `exact` (Circle Facilitator) + Circle Gateway batched | Pays whichever rail the seller offers; prefers `exact` because its evidence is an Arc tx |
+| Settlement       | Arc mainnet (5042), USDC gas, sub-second finality     | A score write costs ~0.003 USDC, so publishing every verdict is economical |
+| Reputation       | `ReputationRegistry` v2 (Arc mainnet) + ERC-8004 identity | Public track record per provider, with payment evidence |
+| Guardrails       | Sidecar-enforced allowlist, payTo pins, Arc-only, per-call + lifetime caps | The brain decides; it can never overspend or pay a stranger |
 | Evaluation       | Programmatic + optional Anthropic judge             | Free signal first; LLM only for substance, Anthropic-only |
-| Dashboard        | FastAPI + a single self-driving page                | The hero is the agent spending, live |
+| Dashboard        | Static page, zero dependencies, reads Arc RPC directly | Nothing to trust but the chain |
 
 ## Flow
 
@@ -98,18 +106,17 @@ One seam — the **Arc adapter** — separates the brain from the chain. `SimArc
 
 ## Smart contract
 
-`ReputationRegistry.sol` — delivered-quality scores (0–10000 bps), written by Obol as it spends, readable by anyone.
+`contracts/src/ReputationRegistry.sol` (v2) — delivered-quality scores (0–10000 bps), written by Obol as it spends, readable by anyone.
 
 ```solidity
-function recordScore(bytes32 providerId, uint16 scoreBps, uint64 calls) external onlyOwner;
-function retire(bytes32 providerId, uint16 scoreBps, uint64 calls) external onlyOwner;
-function scoreOf(bytes32 providerId) external view returns (Record memory);
+function describe(bytes32 providerId, string uri) external onlyOwner;
+function recordScore(bytes32 providerId, uint16 scoreBps, uint64 calls, string evidenceRef) external onlyOwner;
+function retire(bytes32 providerId, uint16 scoreBps, uint64 calls, string evidenceRef) external onlyOwner;
+function scoreOf(bytes32 providerId) external view returns (Record memory); // score, calls, updatedAt, updatedBlock, retired, evidenceHash
+function uriOf(bytes32 providerId) external view returns (string memory);
 ```
 
-```solidity
-event ReputationUpdated(bytes32 indexed providerId, uint16 scoreBps, uint64 calls);
-event ProviderRetired(bytes32 indexed providerId, uint16 scoreBps, uint64 calls);
-```
+7 Foundry tests including a fuzz test (`cd contracts && forge test`), exercised on an Arc mainnet fork. Unaudited; the agent key that owns it holds only a few USDC.
 
 ## Local dev
 
@@ -129,38 +136,20 @@ python -m pytest -q
 
 What a sim run shows: the agent concentrates spend on the cheap high-quality provider, probes the unknowns, and retires the rug-seller (takes payment, delivers nothing) after a handful of calls — a real decision, not a script.
 
-## Deployment (live on Arc)
+## Deployment (Arc mainnet)
 
-Live mode runs through the **sidecar** (`sidecar/payer.mjs`) -- the only process that
-holds a key or touches Arc. The Python brain POSTs jobs to it over localhost.
+Full runbook, with every address and gas figure verified on mainnet: **[docs/MAINNET.md](docs/MAINNET.md)**.
 
-```bash
-cd sidecar && npm install
-cast wallet new                     # generate a buyer key -> fund the address at faucet.circle.com
-cp .env.example .env                # fill BUYER_PRIVATE_KEY, ARC_RPC, ARC_CHAIN_ID, OBOL_SPEND_LIMIT
-node deploy-registry.mjs            # deploy ReputationRegistry -> paste address into .env
-node --env-file=.env payer.mjs      # start the sidecar on :8401 (leave running / use PM2)
-curl -s http://127.0.0.1:8401/health
-
-# then, from the repo root:
-python -m obol.cli run --live --budget 1
 ```
-
-The sidecar exposes `GET /health`, `GET /balance`, `POST /pay {url,method,body}`, and
-`POST /reputation {providerId,scoreBps,calls,retire}`. Payments use Circle's
-`@circle-fin/x402-batching` GatewayClient: `pay()` signs an EIP-3009 USDC authorization
-and hands it to Gateway, which settles in batches -- so a call returns a `paymentId` and
-amount, while the **ReputationRegistry writes are individual on-chain Arc txs**. Per-call
-payment proof comes from the Gateway / seller dashboard; the reputation ledger is your
-on-chain artifact.
-
-Add real endpoints to `config/providers.yaml` as you find them -- start with the
-`circlefin/arc-nanopayments` reference seller, then each cross-team service from the
-Canteen / Arc Discords. Process management on the VPS uses PM2 (`ecosystem.config.js`).
+Python brain (bandit + evaluator)  --localhost-->  sidecar/payer.mjs  --x402-->  sellers
+                                                  (only key holder,           (Exa, CRA AGENT)
+                                                   all guardrails)  --tx-->  ReputationRegistry on Arc
+site/index.html  --JSON-RPC-->  Arc mainnet   (static, no backend)
+```
 
 ## Attribution
 
-Built for the **Lepton Agents Hackathon** (Canteen × Circle on Arc). Uses the Circle Agent Stack — Wallets, Gateway/Nanopayments, x402 — and the `circlefin/arc-nanopayments` reference as the live x402 counterpart. Carries forward the agentic-payments work from the Agora round; the delta here — the buyer-side allocator, the reputation registry, and live cross-team payments — is what's new.
+First built for the **Lepton Agents Hackathon** (Canteen × Circle on Arc testnet); moved to **Arc mainnet** in September 2026. Uses Circle's stack end to end: x402 with the Facilitator Service (`exact`, EIP-3009), Circle Gateway batched payments, CCTP v2 via Bridge Kit for funding, and the canonical ERC-8004 identity registry on Arc.
 
 ## License
 

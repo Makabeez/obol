@@ -30,6 +30,13 @@ class Provider:
     # Free-text the agent uses to decide whether a result matched intent.
     kind: str = "data"
     tags: list[str] = field(default_factory=list)
+    # --- live (Arc mainnet) fields; the sidecar enforces payment guardrails from these ---
+    method: str = "GET"
+    body: Any = None
+    pay_to: str = ""
+    price_usdc_max: float | None = None
+    # JSON keys that must be present and non-empty for a response to count as complete.
+    expect: list[str] = field(default_factory=list)
     # --- sim-only ground truth (agent never reads these) ---
     _sim_quality_mean: float = 0.5
     _sim_quality_spread: float = 0.15
@@ -61,7 +68,7 @@ class Settings:
     # On-chain
     arc_rpc: str = os.environ.get("ARC_RPC", "")
     reputation_contract: str = os.environ.get("REPUTATION_CONTRACT", "")
-    explorer_base: str = os.environ.get("ARC_EXPLORER", "https://explorer.arc.network/tx/")
+    explorer_base: str = os.environ.get("ARC_EXPLORER", "https://explorer.arc.io/tx/")
 
     # Eval LLM. Wallet-adjacent decision -> route through Anthropic only, never a
     # third-party provider. Leave empty to use the programmatic scorer alone.

@@ -33,6 +33,11 @@ class FetchResult:
     body: dict | None   # the payload the seller delivered
     receipt: PaymentReceipt
     latency_ms: float
+    # True when WE could not pay (budget/caps/funds/policy): not the seller's fault.
+    refused: bool = False
+    # Payment evidence: Arc tx hash, "gateway:<id>", or "no-payment:http-<code>".
+    evidence: str = ""
+    http_status: int = 0
 
 
 class ArcAdapter(ABC):
@@ -49,6 +54,6 @@ class ArcAdapter(ABC):
 
     @abstractmethod
     def write_reputation(self, provider_id: str, score_bps: int, calls: int = 0,
-                         retire: bool = False) -> PaymentReceipt:
+                         retire: bool = False, evidence: str = "") -> PaymentReceipt:
         """Record a provider's delivered-quality score (and retirement) on-chain."""
         ...

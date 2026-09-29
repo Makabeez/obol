@@ -1,0 +1,11 @@
+{
+  "name": "obol-bridge-once",
+  "private": true,
+  "type": "module",
+  "description": "One-shot USDC funding Base -> Arc via Circle Bridge Kit (CCTP v2). Isolated from the long-running sidecar on purpose.",
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "@circle-fin/adapter-viem-v2": "1.18.0",
+    "@circle-fin/bridge-kit": "1.15.1"
+  }
+}

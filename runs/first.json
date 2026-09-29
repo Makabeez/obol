@@ -1,0 +1,377 @@
+{
+  "summary": {
+    "budget_start": 0.05,
+    "balance_end": 0.0155,
+    "calls": 30,
+    "spend": 0.0345,
+    "value": 23.65,
+    "value_per_usdc": 685.5072,
+    "ranking": [
+      {
+        "provider": "cra-rpc-health",
+        "calls": 15,
+        "spend": 0.0075,
+        "mean_quality": 0.8081,
+        "edge": 1616.1127,
+        "retired": false
+      },
+      {
+        "provider": "cra-fees-estimate",
+        "calls": 8,
+        "spend": 0.004,
+        "mean_quality": 0.7794,
+        "edge": 1558.8212,
+        "retired": false
+      },
+      {
+        "provider": "cra-fees-forecast",
+        "calls": 2,
+        "spend": 0.002,
+        "mean_quality": 0.6749,
+        "edge": 674.8687,
+        "retired": false
+      },
+      {
+        "provider": "cra-selftest-fail",
+        "calls": 2,
+        "spend": 0.0,
+        "mean_quality": 0.2502,
+        "edge": 250.1876,
+        "retired": false
+      },
+      {
+        "provider": "exa-search",
+        "calls": 3,
+        "spend": 0.021,
+        "mean_quality": 0.6798,
+        "edge": 97.112,
+        "retired": false
+      }
+    ]
+  },
+  "ledger": {
+    "spend": 0.0345,
+    "value": 23.65,
+    "calls": 30,
+    "providers": {
+      "cra-fees-estimate": {
+        "name": "CRA AGENT fee estimate",
+        "calls": 8,
+        "spend": 0.004,
+        "value": 6.8,
+        "drops": 0,
+        "edge": 1700.0
+      },
+      "cra-rpc-health": {
+        "name": "CRA AGENT RPC health",
+        "calls": 15,
+        "spend": 0.0075,
+        "value": 12.75,
+        "drops": 0,
+        "edge": 1700.0
+      },
+      "cra-fees-forecast": {
+        "name": "CRA AGENT base-fee forecast",
+        "calls": 2,
+        "spend": 0.002,
+        "value": 1.7,
+        "drops": 0,
+        "edge": 850.0
+      },
+      "cra-selftest-fail": {
+        "name": "CRA AGENT self-test (always fails)",
+        "calls": 2,
+        "spend": 0.0,
+        "value": 0.0,
+        "drops": 2,
+        "edge": 0.0
+      },
+      "exa-search": {
+        "name": "Exa search",
+        "calls": 3,
+        "spend": 0.021,
+        "value": 2.4,
+        "drops": 0,
+        "edge": 114.2857
+      }
+    },
+    "feed": [
+      {
+        "ts": 1790717850.8771095,
+        "provider_id": "cra-fees-estimate",
+        "provider_name": "CRA AGENT fee estimate",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1558.8212,
+        "tx_hash": "gateway:bc0ca525-c8e1-4c5e-bc68-6c3be5399a5d",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717848.8394294,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1616.1127,
+        "tx_hash": "gateway:94af1171-6099-4900-9384-e1caa08ef1b8",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717848.174254,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1610.9995,
+        "tx_hash": "gateway:fd6f128a-7656-48eb-8b6d-04b991a612b4",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717847.1850152,
+        "provider_id": "exa-search",
+        "provider_name": "Exa search",
+        "paid_usdc": 0.007,
+        "quality": 0.8,
+        "edge": 97.112,
+        "tx_hash": "0x11474d6e0cae475a23601ba1f2420a0a24bb89732b476a3f1e1a8084206580db",
+        "explorer_url": "https://explorer.arc.io/tx/0x11474d6e0cae475a23601ba1f2420a0a24bb89732b476a3f1e1a8084206580db",
+        "delivered": true
+      },
+      {
+        "ts": 1790717843.9377682,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1605.204,
+        "tx_hash": "gateway:f9c2ac7d-ec0d-4514-98f5-3f274ab3300e",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717843.4143245,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1598.5799,
+        "tx_hash": "gateway:80c197f0-cadc-428d-8376-bd4c8f7d7e62",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717842.7965443,
+        "provider_id": "cra-fees-estimate",
+        "provider_name": "CRA AGENT fee estimate",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1543.3534,
+        "tx_hash": "gateway:e8217d3b-d35b-474a-b25e-ca11c7839f7f",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717842.2521095,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1590.9358,
+        "tx_hash": "gateway:02b6e93c-9df1-4c61-9d6f-facd034b97fd",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717837.0475698,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1582.0166,
+        "tx_hash": "gateway:9d67eeb9-79fa-4826-92cb-1b5276e43b48",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717836.5650048,
+        "provider_id": "cra-fees-estimate",
+        "provider_name": "CRA AGENT fee estimate",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1524.014,
+        "tx_hash": "gateway:583e7352-17fd-458a-acf2-c76eaba9a465",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717835.8071342,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1571.4742,
+        "tx_hash": "gateway:2f1416cb-7a2c-4eb9-8c2f-ffa9dbbfffdb",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717835.3362174,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1558.8212,
+        "tx_hash": "gateway:5be0a016-7cb9-4b55-a9a9-97ef472f3dd6",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717828.7692106,
+        "provider_id": "cra-fees-estimate",
+        "provider_name": "CRA AGENT fee estimate",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1499.1418,
+        "tx_hash": "gateway:27ef3728-663f-4e07-b4ff-7873caf7b8f1",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717828.2038255,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1543.3534,
+        "tx_hash": "gateway:9e44a0e7-16c5-42d2-a0bd-d1fab89c24de",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717827.8010623,
+        "provider_id": "cra-selftest-fail",
+        "provider_name": "CRA AGENT self-test (always fails)",
+        "paid_usdc": 0.0,
+        "quality": 0.0,
+        "edge": 250.1876,
+        "tx_hash": "no-payment:http-500",
+        "explorer_url": "",
+        "delivered": false
+      },
+      {
+        "ts": 1790717827.4973023,
+        "provider_id": "cra-fees-forecast",
+        "provider_name": "CRA AGENT base-fee forecast",
+        "paid_usdc": 0.001,
+        "quality": 0.85,
+        "edge": 674.8687,
+        "tx_hash": "gateway:f17e79a3-09b0-4e9f-9266-3413d60a470e",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717826.4698908,
+        "provider_id": "exa-search",
+        "provider_name": "Exa search",
+        "paid_usdc": 0.007,
+        "quality": 0.8,
+        "edge": 92.8411,
+        "tx_hash": "0x4bd40d3f854b34607f372de8e307c5bea10da2ff885ad66dd807b57632f8c040",
+        "explorer_url": "https://explorer.arc.io/tx/0x4bd40d3f854b34607f372de8e307c5bea10da2ff885ad66dd807b57632f8c040",
+        "delivered": true
+      },
+      {
+        "ts": 1790717822.9719121,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1524.014,
+        "tx_hash": "gateway:c1da2241-fa93-4f18-84b5-e6eab92f504b",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717816.1564872,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1499.1418,
+        "tx_hash": "gateway:141ad69e-736e-4c7a-a3f5-ceb0973211e8",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717815.6979225,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1465.966,
+        "tx_hash": "gateway:153aaa44-7327-4792-bb6a-e0a11893746a",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717814.9095347,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1419.4956,
+        "tx_hash": "gateway:9f3edbe2-a2a5-498a-8bed-f11dc963e69c",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717814.163849,
+        "provider_id": "cra-rpc-health",
+        "provider_name": "CRA AGENT RPC health",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1349.7373,
+        "tx_hash": "gateway:86c8cdc5-710a-4beb-9978-c2ca847a48bf",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717813.678323,
+        "provider_id": "cra-fees-estimate",
+        "provider_name": "CRA AGENT fee estimate",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1465.966,
+        "tx_hash": "gateway:1fb02064-2ad0-400b-b4d8-9312c602f4ac",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717812.9861164,
+        "provider_id": "cra-fees-estimate",
+        "provider_name": "CRA AGENT fee estimate",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1419.4956,
+        "tx_hash": "gateway:27f474aa-8fb7-43a8-85b8-72a6a4ef25ab",
+        "explorer_url": "",
+        "delivered": true
+      },
+      {
+        "ts": 1790717812.444492,
+        "provider_id": "cra-fees-estimate",
+        "provider_name": "CRA AGENT fee estimate",
+        "paid_usdc": 0.0005,
+        "quality": 0.85,
+        "edge": 1349.7373,
+        "tx_hash": "gateway:9f30df5f-311f-439d-92ff-6081edb37022",
+        "explorer_url": "",
+        "delivered": true
+      }
+    ],
+    "updated": 1790717860.9652705
+  }
+}

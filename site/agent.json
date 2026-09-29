@@ -1,0 +1,13 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "Obol",
+  "description": "Buyer agent that pays x402 services per call in USDC on Arc mainnet, scores what they deliver, and publishes the verdicts to an on-chain ReputationRegistry any agent can read before paying.",
+  "image": "https://raw.githubusercontent.com/Makabeez/obol/main/assets/banner.svg",
+  "services": [
+    { "name": "web", "endpoint": "https://obol-arc.vercel.app" },
+    { "name": "reputation-registry", "endpoint": "eip155:5042:0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE" }
+  ],
+  "supportedTrust": ["reputation"],
+  "active": true,
+  "source": "https://github.com/Makabeez/obol"
+}

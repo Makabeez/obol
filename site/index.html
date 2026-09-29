@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Obol — who actually delivers, paid and recorded on Arc</title>
+<meta name="description" content="Obol is a buyer agent that pays x402 services in USDC on Arc mainnet, scores what they deliver, and writes the verdict on-chain.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23a8842f'/><circle cx='32' cy='32' r='20' fill='none' stroke='%2310201d' stroke-width='3'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #eef0ea;
+    --ink: #10201d;
+    --muted: #4d5d58;
+    --rule: #c9cfc4;
+    --gold: #8a6a1f;
+    --good: #26735f;
+    --bad: #a3402a;
+    --panel: #f7f8f4;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #0c1c1a; --ink: #e6e2d5; --muted: #9fb0a4; --rule: #24403b;
+      --gold: #caa253; --good: #4fb39a; --bad: #d9785f; --panel: #10241f;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--paper); color: var(--ink); }
+  body {
+    margin: 0; font: 400 16px/1.55 "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration-color: var(--gold); text-underline-offset: 3px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 56px 24px 80px; }
+
+  header { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: start; }
+  .coin {
+    width: 92px; height: 92px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #e2c47a, var(--gold) 60%, #5e4712);
+    box-shadow: inset 0 0 0 5px rgba(0,0,0,.18), inset 0 0 0 13px rgba(255,255,255,.12);
+    display: grid; place-items: center;
+    font: 600 34px/1 "Newsreader", Georgia, serif; color: #2a1f06;
+  }
+  h1 { font: 600 clamp(34px, 5vw, 52px)/1.05 "Newsreader", Georgia, serif; margin: 0 0 14px; letter-spacing: -0.01em; }
+  .lede { max-width: 62ch; margin: 0; color: var(--muted); font-size: 18px; }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 20px; font-size: 14px; color: var(--muted); }
+  .facts b { color: var(--ink); font-weight: 600; }
+
+  h2 { font: 600 26px/1.2 "Newsreader", Georgia, serif; margin: 64px 0 6px; }
+  .sub { margin: 0 0 22px; color: var(--muted); max-width: 70ch; }
+
+  .ledger { border-top: 2px solid var(--ink); }
+  .row {
+    display: grid; grid-template-columns: 110px 1fr 190px; gap: 20px;
+    padding: 22px 0; border-bottom: 1px solid var(--rule); align-items: start;
+  }
+  .score { font: 600 54px/0.9 "Newsreader", Georgia, serif; font-variant-numeric: tabular-nums; }
+  .score small { font-size: 18px; color: var(--muted); font-weight: 400; }
+  .row.retired .score { color: var(--bad); text-decoration: line-through; text-decoration-thickness: 3px; }
+  .host { font-weight: 600; font-size: 17px; word-break: break-word; }
+  .path { color: var(--muted); font-size: 14px; word-break: break-all; }
+  .verdict { margin-top: 8px; font-size: 14px; }
+  .verdict.ok { color: var(--good); } .verdict.cut { color: var(--bad); }
+  .proof { font-size: 14px; line-height: 1.7; }
+  .proof span { color: var(--muted); display: block; }
+  .state { padding: 28px 0; color: var(--muted); border-bottom: 1px solid var(--rule); }
+  .state.err { color: var(--bad); }
+
+  .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 8px; }
+  .how div { border-top: 1px solid var(--rule); padding-top: 14px; }
+  .how h3 { font: 600 18px/1.3 "Newsreader", Georgia, serif; margin: 0 0 6px; }
+  .how p { margin: 0; color: var(--muted); font-size: 15px; }
+  pre {
+    background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
+    padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.5;
+  }
+  footer { margin-top: 64px; font-size: 14px; color: var(--muted); }
+
+  @media (max-width: 720px) {
+    header { grid-template-columns: 1fr; gap: 18px; }
+    .row { grid-template-columns: 84px 1fr; }
+    .proof { grid-column: 1 / -1; }
+    .score { font-size: 42px; }
+    .how { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .row { animation: strike .45s ease-out both; }
+    @keyframes strike { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="coin" aria-hidden="true">Ο</div>
+    <div>
+      <h1>Which paid APIs actually deliver?</h1>
+      <p class="lede">Obol is an agent with a USDC budget. It pays x402 services per call on Arc mainnet,
+        scores what comes back, stops paying the ones that fail, and writes each verdict to a public
+        registry any other agent can read before it pays.</p>
+      <div class="facts" id="facts">
+        <span>Network <b>Arc mainnet (5042)</b></span>
+        <span>Registry <b id="f-registry">loading</b></span>
+        <span>Agent <b id="f-agent">loading</b></span>
+        <span id="f-8004-wrap" hidden>ERC-8004 identity <b id="f-8004"></b></span>
+      </div>
+    </div>
+  </header>
+
+  <h2>Verdicts on Arc</h2>
+  <p class="sub">Read live from the registry contract in your browser. Each score links to the
+    registry write, and to the payment it was based on.</p>
+  <div class="ledger" id="ledger"><div class="state">Reading the registry on Arc…</div></div>
+
+  <h2>How a verdict is made</h2>
+  <div class="how">
+    <div><h3>Pay</h3><p>The agent pays the seller's HTTP 402 challenge in USDC on Arc, by EIP-3009
+      transfer or through Circle Gateway. It only pays allowlisted sellers at pinned addresses, under
+      per-call and lifetime caps.</p></div>
+    <div><h3>Score</h3><p>It checks the response: did it arrive, is it complete, how fast, and for chain
+      data, how far behind the live Arc head it is. Stale or empty data scores low.</p></div>
+    <div><h3>Record</h3><p>A Thompson-sampling allocator moves spend toward sellers that deliver value per
+      USDC. Sellers that keep failing are retired on-chain, with the evidence attached.</p></div>
+  </div>
+
+  <h2>Check it yourself</h2>
+  <p class="sub">Nothing here needs trust in this page. Read the same data with Foundry:</p>
+  <pre id="verify">cast call &lt;registry&gt; "providerCount()(uint256)" --rpc-url https://rpc.mainnet.arc.io</pre>
+
+  <footer>
+    Source: <a href="https://github.com/Makabeez/obol">github.com/Makabeez/obol</a> (MIT).
+    Built by <a href="https://github.com/Makabeez">Makabeez</a>.
+  </footer>
+</div>
+
+<script src="./reader.js"></script>
+<script>
+  // Filled in after mainnet deploy (see docs/MAINNET.md). ?registry=0x... overrides for testing.
+  const CONFIG = {
+    rpc: "https://rpc.mainnet.arc.io",
+    explorer: "https://explorer.arc.io",
+    registry: "0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE",
+    agent: "0x4a36Df350507d974C882Ac89f402215340d67f55",
+    agentId: "345",
+    identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+  };
+  const q = new URLSearchParams(location.search);
+  if (/^0x[0-9a-fA-F]{40}$/.test(q.get("registry") || "")) CONFIG.registry = q.get("registry");
+  if (/^http:\/\/127\.0\.0\.1:\d+$/.test(q.get("rpc") || "")) CONFIG.rpc = q.get("rpc"); // local fork testing only
+
+  const $ = (id) => document.getElementById(id);
+  const short = (a) => a.slice(0, 6) + "…" + a.slice(-4);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const link = (path, text) => `<a href="${CONFIG.explorer}/${path}" target="_blank" rel="noopener">${esc(text)}</a>`;
+
+  function evidenceHtml(ev) {
+    if (!ev) return "<span>No evidence attached</span>";
+    if (/^0x[0-9a-fA-F]{64}$/.test(ev)) return link("tx/" + ev, "Payment tx " + short(ev));
+    if (ev.startsWith("gateway:")) return `<span>Paid via Circle Gateway, transfer ${esc(ev.slice(8, 26))}</span>`;
+    const m = ev.match(/^no-payment:http-(\d+)/);
+    if (m) return `<span>Seller answered HTTP ${m[1]}, nothing was charged</span>`;
+    return `<span>${esc(ev)}</span>`;
+  }
+  function when(ts) {
+    const d = new Date(ts * 1000);
+    return d.toISOString().slice(0, 16).replace("T", " ") + " UTC";
+  }
+
+  async function main() {
+    const ok = /^0x[0-9a-fA-F]{40}$/;
+    $("f-registry").innerHTML = ok.test(CONFIG.registry) ? link("address/" + CONFIG.registry, short(CONFIG.registry)) : "not deployed yet";
+    $("f-agent").innerHTML = ok.test(CONFIG.agent) ? link("address/" + CONFIG.agent, short(CONFIG.agent)) : "not set";
+    if (/^\d+$/.test(CONFIG.agentId)) {
+      $("f-8004-wrap").hidden = false;
+      $("f-8004").innerHTML = link("address/" + CONFIG.identityRegistry, "#" + CONFIG.agentId);
+    }
+    if (!ok.test(CONFIG.registry)) {
+      $("ledger").innerHTML = '<div class="state">The registry address is not configured on this page yet.</div>';
+      return;
+    }
+    $("verify").textContent =
+      `cast call ${CONFIG.registry} "providerCount()(uint256)" --rpc-url ${CONFIG.rpc}\n` +
+      `cast call ${CONFIG.registry} "providerIdAt(uint256)(bytes32)" 0 --rpc-url ${CONFIG.rpc}\n` +
+      `cast call ${CONFIG.registry} "scoreOf(bytes32)((uint16,uint64,uint64,uint64,bool,bytes32))" <id> --rpc-url ${CONFIG.rpc}`;
+    try {
+      const { rows } = await ObolReader.readRegistry(CONFIG.rpc, CONFIG.registry);
+      if (!rows.length) {
+        $("ledger").innerHTML = '<div class="state">No verdicts yet. The agent has not written its first score.</div>';
+        return;
+      }
+      rows.sort((a, b) => (a.retired - b.retired) || (b.scoreBps - a.scoreBps));
+      $("ledger").innerHTML = rows.map((r) => {
+        let host = r.uri, path = "";
+        try { const u = new URL(r.uri); host = u.host; path = u.pathname; } catch {}
+        const verdict = r.retired
+          ? `<div class="verdict cut">Retired after ${r.calls} call${r.calls === 1 ? "" : "s"}: not worth paying</div>`
+          : `<div class="verdict ok">Active, scored on ${r.calls} paid call${r.calls === 1 ? "" : "s"}</div>`;
+        return `<div class="row${r.retired ? " retired" : ""}">
+          <div class="score">${Math.round(r.scoreBps / 100)}<small>/100</small></div>
+          <div><div class="host">${esc(host)}</div><div class="path">${esc(path)}</div>${verdict}</div>
+          <div class="proof">
+            ${r.writeTx ? link("tx/" + r.writeTx, "Registry write " + short(r.writeTx)) : "<span>Write tx not found</span>"}
+            ${evidenceHtml(r.evidence)}
+            <span>${when(r.updatedAt)}</span>
+          </div></div>`;
+      }).join("");
+    } catch (e) {
+      $("ledger").innerHTML = `<div class="state err">Could not read the registry from ${esc(CONFIG.rpc)}: ${esc(e.message)}. Reload to retry.</div>`;
+    }
+  }
+  main();
+</script>
+</body>
+</html>

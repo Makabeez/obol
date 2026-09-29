@@ -1,8 +1,13 @@
 [profile.default]
-src = "."
+src = "src"
+test = "test"
 out = "out"
 libs = ["lib"]
-solc = "0.8.20"
-# Verification-friendly defaults (matches the Watchlist.sol deploy that verified cleanly):
-optimizer = false
+solc = "0.8.30"
+evm_version = "prague"
+optimizer = true
+optimizer_runs = 200
 bytecode_hash = "ipfs"
+
+[fuzz]
+runs = 512

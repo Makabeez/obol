@@ -1,14 +1,12 @@
 """Live Arc adapter -- talks to the sidecar (sidecar/payer.mjs) over localhost.
 
-The sidecar is the only process that holds a key or touches Arc. It exposes:
-    GET  /health                          -> { ok, chain, registry }
-    GET  /balance                         -> { spent, limit, remaining, gateway }
-    POST /pay      {url,method,body}       -> { ok, status, body, amountUsdc, paymentId }
-    POST /reputation {providerId,scoreBps,calls,retire} -> { txHash }
+The sidecar is the only process that holds a key or touches Arc mainnet, and it enforces
+every payment guardrail (allowlist by provider id, payTo pin, Arc-only, per-call and
+lifetime caps). This adapter only asks it to pay a provider *by id*.
 
-Note on proof: Gateway batches payments, so /pay returns a paymentId + amount, NOT an
-immediate tx hash. The individual Arc txs come from /reputation (recordScore/retire),
-which are the explorer-visible on-chain proof for the demo.
+    GET  /health    GET /balance
+    POST /pay        {providerId}  -> {ok, paid, httpStatus, amountUsdc, scheme, evidence, latencyMs, body}
+    POST /reputation {providerId, scoreBps, calls, retire, evidence} -> {txHash}
 
 Start the sidecar first:  cd sidecar && node --env-file=.env payer.mjs
 """
@@ -17,9 +15,8 @@ from __future__ import annotations
 
 import json
 import os
-import time
+import urllib.error
 import urllib.request
-from pathlib import Path
 
 from .adapter import ArcAdapter, FetchResult, PaymentReceipt
 
@@ -31,27 +28,24 @@ class LiveArcAdapter(ArcAdapter):
         self.explorer_base = explorer_base.rstrip("/") + "/" if explorer_base else ""
         self.base = (sidecar_url or os.environ.get("OBOL_SIDECAR_URL",
                      "http://127.0.0.1:8401")).rstrip("/")
-        self.timeout = float(os.environ.get("OBOL_SIDECAR_TIMEOUT", "60"))
-        # Confirm the sidecar is up and seed the local balance from it.
+        self.timeout = float(os.environ.get("OBOL_SIDECAR_TIMEOUT", "90"))
         self._check_health()
         self._balance = self._read_balance()
 
     # ---- HTTP helpers -----------------------------------------------------
     def _get(self, path: str) -> dict:
-        req = urllib.request.Request(self.base + path, method="GET")
-        with urllib.request.urlopen(req, timeout=self.timeout) as r:
+        with urllib.request.urlopen(self.base + path, timeout=self.timeout) as r:
             return json.loads(r.read().decode() or "{}")
 
     def _post(self, path: str, payload: dict) -> dict:
-        data = json.dumps(payload).encode()
         req = urllib.request.Request(
-            self.base + path, data=data, method="POST",
+            self.base + path, data=json.dumps(payload).encode(), method="POST",
             headers={"Content-Type": "application/json"},
         )
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as r:
                 return json.loads(r.read().decode() or "{}")
-        except urllib.error.HTTPError as e:  # sidecar returns JSON errors with a status
+        except urllib.error.HTTPError as e:
             try:
                 return json.loads(e.read().decode() or "{}")
             except Exception:
@@ -61,78 +55,58 @@ class LiveArcAdapter(ArcAdapter):
         try:
             h = self._get("/health")
         except Exception as e:
-            raise RuntimeError(
-                f"sidecar not reachable at {self.base} -- start it with "
-                f"`cd sidecar && node --env-file=.env payer.mjs`  ({e})"
-            )
-        if not h.get("ok"):
-            raise RuntimeError(f"sidecar unhealthy: {h}")
+            raise RuntimeError(f"sidecar not reachable at {self.base} -- start it with "
+                               f"`cd sidecar && node --env-file=.env payer.mjs` ({e})")
+        if not h.get("ok") or h.get("chainId") != 5042:
+            raise RuntimeError(f"sidecar unhealthy or not on Arc mainnet: {h}")
 
     def _read_balance(self) -> float:
-        sidecar_bal = None
         try:
-            b = self._get("/balance")
-            for key in ("remaining", "gateway"):
-                v = b.get(key)
-                if isinstance(v, (int, float)):
-                    sidecar_bal = float(v)
-                    break
+            remaining = float(self._get("/balance").get("remaining"))
         except Exception:
-            sidecar_bal = None
-        # Safety: never let a live run spend past the --budget the user set, even if the
-        # sidecar's spend limit / Gateway balance is higher.
-        if self.budget_usdc > 0 and sidecar_bal is not None:
-            return min(sidecar_bal, self.budget_usdc)
-        if self.budget_usdc > 0:
+            remaining = None
+        # Never spend past --budget, even if the sidecar's lifetime cap is higher.
+        if remaining is None:
             return self.budget_usdc
-        return sidecar_bal if sidecar_bal is not None else 0.0
+        return min(remaining, self.budget_usdc) if self.budget_usdc > 0 else remaining
 
     def balance_usdc(self) -> float:
         return round(self._balance, 6)
 
     # ---- pay-per-call -----------------------------------------------------
     def pay_and_fetch(self, provider, request: dict) -> FetchResult:
-        t0 = time.perf_counter()
-        price = float(provider.price_usdc)
-        if self._balance < price:
-            return FetchResult(provider.id, ok=False, body=None,
-                               receipt=PaymentReceipt("", provider.id, 0.0, settled=False),
-                               latency_ms=0.0)
-
-        out = self._post("/pay", {
-            "url": provider.url,
-            "method": request.get("method", "GET"),
-            "body": request.get("body"),
-        })
-        settled = bool(out.get("ok"))
-        # Gateway batches: the receipt's "hash" is the paymentId (settlement is async).
-        pid = out.get("paymentId") or ""
-        amount = float(out.get("amountUsdc") or (price if settled else 0.0))
-        if settled:
+        empty = PaymentReceipt("", provider.id, 0.0, settled=False)
+        if self._balance < float(provider.price_usdc):
+            return FetchResult(provider.id, False, None, empty, 0.0, refused=True,
+                               evidence="refused:budget")
+        out = self._post("/pay", {"providerId": provider.id})
+        paid = bool(out.get("paid"))
+        amount = float(out.get("amountUsdc") or 0.0)
+        status = int(out.get("httpStatus") or 0)
+        evidence = str(out.get("evidence") or "")
+        if paid:
             self._balance -= amount
+        # We could not pay: policy/cap refusal (status 0) or the seller still wants
+        # payment after we tried (402 = our funds/rail problem, not the seller's fault).
+        refused = (not paid) and (status in (0, 402))
+        tx = evidence if evidence.startswith("0x") else ""
         receipt = PaymentReceipt(
-            tx_hash=pid,                      # paymentId, not an on-chain tx (Gateway batch)
-            provider_id=provider.id,
-            amount_usdc=amount,
-            settled=settled,
-            explorer_url="",                  # batch settlement; no per-call explorer link
-        )
-        return FetchResult(
-            provider.id, ok=settled, body=out.get("body"),
-            receipt=receipt, latency_ms=(time.perf_counter() - t0) * 1000,
-        )
-
-    # ---- on-chain reputation (REAL Arc tx) --------------------------------
-    def write_reputation(self, provider_id: str, score_bps: int, calls: int,
-                         retire: bool = False) -> PaymentReceipt:
-        out = self._post("/reputation", {
-            "providerId": provider_id,
-            "scoreBps": int(score_bps),
-            "calls": int(calls),
-            "retire": bool(retire),
-        })
-        tx = out.get("txHash") or ""
-        return PaymentReceipt(
-            tx, provider_id, 0.0, settled=bool(tx),
+            tx_hash=tx or evidence, provider_id=provider.id, amount_usdc=amount, settled=paid,
             explorer_url=(self.explorer_base + tx) if (self.explorer_base and tx) else "",
         )
+        return FetchResult(provider.id, ok=bool(out.get("ok")), body=out.get("body"),
+                           receipt=receipt, latency_ms=float(out.get("latencyMs") or 0.0),
+                           refused=refused, evidence=evidence, http_status=status)
+
+    # ---- on-chain reputation (REAL Arc tx) --------------------------------
+    def write_reputation(self, provider_id: str, score_bps: int, calls: int = 0,
+                         retire: bool = False, evidence: str = "") -> PaymentReceipt:
+        out = self._post("/reputation", {
+            "providerId": provider_id, "scoreBps": int(score_bps), "calls": int(calls),
+            "retire": bool(retire), "evidence": evidence,
+        })
+        tx = out.get("txHash") or ""
+        if not tx:
+            print(f"  !  reputation write failed for {provider_id}: {out.get('error')}")
+        return PaymentReceipt(tx, provider_id, 0.0, settled=bool(tx),
+                              explorer_url=(self.explorer_base + tx) if (self.explorer_base and tx) else "")

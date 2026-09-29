@@ -1,16 +1,23 @@
 {
   "name": "obol-sidecar",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "Obol's chain gateway: holds the agent wallet, executes x402 nanopayments via Circle Gateway, and writes reputation tx on Arc. The Python brain calls this over localhost so it never touches a key.",
+  "description": "Obol's chain gateway on Arc mainnet: holds the agent key, pays x402 sellers (Circle Gateway batched + EIP-3009 exact), writes reputation on-chain.",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "start": "node payer.mjs",
-    "deploy-registry": "node deploy-registry.mjs",
-    "check": "node --check payer.mjs && node --check deploy-registry.mjs"
+    "start": "node --env-file=.env payer.mjs",
+    "check": "node --check payer.mjs && node --check gateway-deposit.mjs && node --check register-agent.mjs && node --check status.mjs && node --check gateway-withdraw.mjs",
+    "status": "node --env-file=.env status.mjs"
   },
   "dependencies": {
-    "@circle-fin/x402-batching": "^3.2.0",
-    "viem": "^2.21.0"
+    "@circle-fin/x402-batching": "3.5.0",
+    "@x402/core": "2.26.0",
+    "@x402/evm": "2.26.0",
+    "@x402/fetch": "2.26.0",
+    "viem": "2.56.8",
+    "yaml": "2.9.1"
   }
 }

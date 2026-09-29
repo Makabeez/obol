@@ -46,6 +46,8 @@ def cmd_run(args) -> int:
             tag = "RETIRED" if ev["retired"] else f"edge {ev['edge']:.3f}"
             print(f"  pay {ev['paid']:.4f} USDC -> {ev['provider']:<22} "
                   f"q={ev['quality']:.2f}  {tag}  bal {ev['balance']:.4f}")
+        elif ev["kind"] == "skip":
+            print(f"  -  skip {ev['provider']} ({ev['reason']})")
         elif ev["kind"] == "retire":
             print(f"  x  cut {ev['provider']} ({ev['reason']})")
         elif ev["kind"] == "reputation":

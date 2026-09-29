@@ -62,7 +62,7 @@ class SimArcAdapter(ArcAdapter):
         return FetchResult(provider.id, ok=True, body=body, receipt=receipt, latency_ms=latency)
 
     def write_reputation(self, provider_id: str, score_bps: int, calls: int = 0,
-                         retire: bool = False) -> PaymentReceipt:
+                         retire: bool = False, evidence: str = "") -> PaymentReceipt:
         r = PaymentReceipt(self._tx(), provider_id, 0.0, settled=True,
                            explorer_url="")  # sim tx is not real -> no explorer link
         self._rep_writes.append(r)
