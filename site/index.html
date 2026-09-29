@@ -197,7 +197,7 @@
         try { const u = new URL(r.uri); host = u.host; path = u.pathname; } catch {}
         const verdict = r.retired
           ? `<div class="verdict cut">Retired after ${r.calls} call${r.calls === 1 ? "" : "s"}: not worth paying</div>`
-          : `<div class="verdict ok">Active, scored on ${r.calls} paid call${r.calls === 1 ? "" : "s"}</div>`;
+          : `<div class="verdict ok">Active, scored on ${r.calls} call${r.calls === 1 ? "" : "s"}</div>`;
         return `<div class="row${r.retired ? " retired" : ""}">
           <div class="score">${Math.round(r.scoreBps / 100)}<small>/100</small></div>
           <div><div class="host">${esc(host)}</div><div class="path">${esc(path)}</div>${verdict}</div>
