@@ -89,7 +89,7 @@ One seam — the **Arc adapter** — separates the brain from the chain. `SimArc
 | Adaptivity       | Evidence decay + epsilon re-exploration             | Re-evaluates a live market; tracks providers whose quality drifts |
 | Cut-off          | Delivery gate (non-decaying) + edge gate            | Retires scammers that take payment and return nothing; starves the merely-mediocre |
 | Payments         | x402 v2 client with two rails: EIP-3009 `exact` (Circle Facilitator) + Circle Gateway batched | Pays whichever rail the seller offers; prefers `exact` because its evidence is an Arc tx |
-| Settlement       | Arc mainnet (5042), USDC gas, sub-second finality     | A score write costs ~0.003 USDC, so publishing every verdict is economical |
+| Settlement       | Arc mainnet (5042), USDC gas, sub-second finality     | A score write costs ~0.001 USDC on mainnet (measured), so publishing every verdict is economical |
 | Reputation       | `ReputationRegistry` v2 (Arc mainnet) + ERC-8004 identity | Public track record per provider, with payment evidence |
 | Guardrails       | Sidecar-enforced allowlist, payTo pins, Arc-only, per-call + lifetime caps | The brain decides; it can never overspend or pay a stranger |
 | Evaluation       | Programmatic + optional Anthropic judge             | Free signal first; LLM only for substance, Anthropic-only |

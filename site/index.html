@@ -3,215 +3,484 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Obol — who actually delivers, paid and recorded on Arc</title>
-<meta name="description" content="Obol is a buyer agent that pays x402 services in USDC on Arc mainnet, scores what they deliver, and writes the verdict on-chain.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23a8842f'/><circle cx='32' cy='32' r='20' fill='none' stroke='%2310201d' stroke-width='3'/></svg>">
+<title>Obol — paid APIs, scored on Arc</title>
+<meta name="description" content="Obol is a buyer agent that pays x402 services in USDC on Arc mainnet, scores what they deliver, and writes each verdict, with payment evidence, to an on-chain registry.">
+<meta property="og:title" content="Obol — which paid APIs actually deliver?">
+<meta property="og:description" content="An agent pays x402 sellers in USDC on Arc mainnet, scores what they deliver, and publishes every verdict on-chain.">
+<meta name="theme-color" content="#0c1c1a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23b08a35'/><circle cx='32' cy='32' r='20' fill='none' stroke='%2310201d' stroke-width='3'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Public+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,600&family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #eef0ea;
-    --ink: #10201d;
-    --muted: #4d5d58;
-    --rule: #c9cfc4;
-    --gold: #8a6a1f;
-    --good: #26735f;
-    --bad: #a3402a;
-    --panel: #f7f8f4;
+    --bg: #eef0ea; --bg2: #e5e8e0; --card: #f8f9f5; --ink: #10201d; --muted: #52625d; --faint: #7c8a85;
+    --rule: #d3d8cf; --rule2: #c2c9bd;
+    --gold: #8a6a1f; --gold-soft: #f1e6c8; --good: #1f6f5b; --good-soft: #d8ebe3;
+    --warn: #8a6a1f; --warn-soft: #f1e6c8; --bad: #a3402a; --bad-soft: #f3ddd6;
+    --shadow: 0 1px 2px rgba(16,32,29,.06), 0 8px 24px -12px rgba(16,32,29,.18);
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --serif: "Newsreader", Georgia, serif;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --paper: #0c1c1a; --ink: #e6e2d5; --muted: #9fb0a4; --rule: #24403b;
-      --gold: #caa253; --good: #4fb39a; --bad: #d9785f; --panel: #10241f;
+      --bg: #0b1917; --bg2: #0f211e; --card: #10241f; --ink: #e8e4d8; --muted: #a2b2a8; --faint: #72857c;
+      --rule: #1f3934; --rule2: #2a4a44;
+      --gold: #d2ab5c; --gold-soft: #2c2715; --good: #5cc0a4; --good-soft: #12332b;
+      --warn: #d2ab5c; --warn-soft: #2c2715; --bad: #e0836a; --bad-soft: #3a1f18;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px -14px rgba(0,0,0,.6);
     }
   }
   * { box-sizing: border-box; }
-  html { background: var(--paper); color: var(--ink); }
-  body {
-    margin: 0; font: 400 16px/1.55 "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
+  html { background: var(--bg); color: var(--ink); scroll-behavior: smooth; }
+  body { margin: 0; font: 400 16px/1.55 "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; background: var(--bg); }
   a { color: inherit; text-decoration-color: var(--gold); text-underline-offset: 3px; }
-  a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 56px 24px 80px; }
+  a:hover { color: var(--gold); }
+  :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  .mono { font-family: var(--mono); font-size: .92em; }
 
-  header { display: grid; grid-template-columns: auto 1fr; gap: 28px; align-items: start; }
-  .coin {
-    width: 92px; height: 92px; border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #e2c47a, var(--gold) 60%, #5e4712);
-    box-shadow: inset 0 0 0 5px rgba(0,0,0,.18), inset 0 0 0 13px rgba(255,255,255,.12);
-    display: grid; place-items: center;
-    font: 600 34px/1 "Newsreader", Georgia, serif; color: #2a1f06;
+  /* ---------- top bar ---------- */
+  .top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--rule); }
+  .top .wrap { display: flex; align-items: center; gap: 14px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; font: 600 20px/1 var(--serif); text-decoration: none; }
+  .brand:hover { color: inherit; }
+  .coin-sm { width: 28px; height: 28px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ecd08a, #b08a35 55%, #5e4712); box-shadow: inset 0 0 0 2px rgba(0,0,0,.2), inset 0 0 0 5px rgba(255,255,255,.14); }
+  .live { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); padding: 6px 12px; border: 1px solid var(--rule); border-radius: 999px; background: var(--card); white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--faint); flex: none; }
+  .dot.on { background: var(--good); box-shadow: 0 0 0 0 color-mix(in srgb, var(--good) 60%, transparent); animation: pulse 2s infinite; }
+  .dot.err { background: var(--bad); }
+  @keyframes pulse { 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+  .toplinks { display: flex; gap: 18px; font-size: 14px; }
+  .toplinks a { text-decoration: none; color: var(--muted); }
+  .toplinks a:hover { color: var(--ink); }
+
+  /* ---------- hero ---------- */
+  .hero { display: grid; grid-template-columns: 1.35fr 1fr; gap: 48px; padding: 64px 0 40px; align-items: center; }
+  .eyebrow { display: inline-flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); margin-bottom: 16px; }
+  h1 { font: 600 clamp(36px, 5.4vw, 60px)/1.02 var(--serif); margin: 0 0 18px; letter-spacing: -0.015em; }
+  .lede { margin: 0 0 26px; color: var(--muted); font-size: 18px; max-width: 58ch; }
+  .ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 8px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1px solid var(--rule2); background: var(--card); color: var(--ink); cursor: pointer; font-family: inherit; }
+  .btn:hover { border-color: var(--gold); color: var(--ink); }
+  .btn.primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .btn.primary:hover { color: var(--bg); opacity: .9; }
+  .btn svg { width: 16px; height: 16px; }
+
+  .idcard { background: var(--card); border: 1px solid var(--rule); border-radius: 14px; padding: 22px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .idcard::before { content: ""; position: absolute; right: -60px; top: -60px; width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ecd08a, #b08a35 55%, #5e4712); opacity: .16; }
+  .idcard .coin { width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ecd08a, #b08a35 55%, #5e4712); box-shadow: inset 0 0 0 3px rgba(0,0,0,.18), inset 0 0 0 9px rgba(255,255,255,.12); display: grid; place-items: center; font: 600 24px/1 var(--serif); color: #2a1f06; margin-bottom: 14px; }
+  .idcard h3 { margin: 0 0 2px; font: 600 20px/1.2 var(--serif); }
+  .idcard .role { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 9px 16px; font-size: 14px; margin: 0; }
+  .kv dt { color: var(--muted); }
+  .kv dd { margin: 0; text-align: right; font-weight: 500; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ---------- stats ---------- */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; margin-bottom: 8px; }
+  .stat { background: var(--card); padding: 18px 20px; }
+  .stat .v { font: 600 32px/1.1 var(--serif); font-variant-numeric: tabular-nums; }
+  .stat .l { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  /* ---------- sections ---------- */
+  section { padding: 56px 0 0; }
+  .sec-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  h2 { font: 600 30px/1.15 var(--serif); margin: 0 0 6px; letter-spacing: -0.01em; }
+  .sub { margin: 0; color: var(--muted); max-width: 66ch; }
+  .meta { font-size: 13px; color: var(--faint); display: flex; align-items: center; gap: 10px; }
+  .iconbtn { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 inherit; font-family: inherit; color: var(--muted); background: var(--card); border: 1px solid var(--rule); padding: 7px 11px; border-radius: 7px; cursor: pointer; }
+  .iconbtn:hover { color: var(--ink); border-color: var(--rule2); }
+  .iconbtn svg { width: 14px; height: 14px; }
+  .iconbtn.spin svg { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- verdicts ---------- */
+  .ledger { display: grid; gap: 12px; }
+  .vrow { display: grid; grid-template-columns: 44px 150px 1fr 240px; gap: 20px; align-items: center; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; padding: 18px 20px; }
+  .rank { font: 600 15px/1 var(--mono); color: var(--faint); }
+  .scorebox .n { font: 600 44px/1 var(--serif); font-variant-numeric: tabular-nums; }
+  .scorebox .n small { font-size: 16px; color: var(--muted); font-weight: 400; margin-left: 2px; }
+  .bar { height: 6px; border-radius: 3px; background: var(--bg2); margin-top: 10px; overflow: hidden; }
+  .bar i { display: block; height: 100%; border-radius: 3px; background: var(--c, var(--good)); width: 0; transition: width .9s cubic-bezier(.2,.8,.2,1); }
+  .band-good { --c: var(--good); } .band-warn { --c: var(--warn); } .band-bad { --c: var(--bad); }
+  .band-good .n { color: var(--ink); } .band-bad .n { color: var(--bad); }
+  .seller .host { font-weight: 600; font-size: 17px; word-break: break-word; }
+  .seller .path { font-family: var(--mono); font-size: 13px; color: var(--muted); word-break: break-all; margin-top: 2px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
+  .b-good { background: var(--good-soft); color: var(--good); }
+  .b-bad { background: var(--bad-soft); color: var(--bad); }
+  .b-gold { background: var(--gold-soft); color: var(--gold); }
+  .b-plain { border-color: var(--rule2); color: var(--muted); }
+  .proof { font-size: 13.5px; display: grid; gap: 6px; }
+  .proof a, .proof .pl { display: flex; align-items: center; gap: 6px; text-decoration: none; color: var(--ink); min-width: 0; }
+  .proof a:hover { color: var(--gold); }
+  .proof .k { color: var(--muted); flex: none; }
+  .proof .val { font-family: var(--mono); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .proof .when { color: var(--faint); font-size: 12.5px; }
+  .ext { width: 12px; height: 12px; flex: none; opacity: .7; }
+  .copy { background: none; border: 0; padding: 2px; color: var(--muted); cursor: pointer; display: inline-flex; }
+  .copy:hover { color: var(--ink); }
+  .copy svg { width: 13px; height: 13px; }
+  .vrow.retired { opacity: .8; }
+  .vrow.retired .n { text-decoration: line-through; text-decoration-thickness: 3px; color: var(--bad); }
+
+  .skel { background: var(--card); border: 1px solid var(--rule); border-radius: 12px; height: 104px; position: relative; overflow: hidden; }
+  .skel::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--bg2) 80%, transparent), transparent); animation: shimmer 1.3s infinite; transform: translateX(-100%); }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  .notice { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 14px 16px; border-radius: 10px; font-size: 14px; background: var(--bad-soft); color: var(--bad); margin-bottom: 12px; }
+  .notice.soft { background: var(--gold-soft); color: var(--gold); }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 14px; font-size: 13px; color: var(--muted); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 10px; height: 10px; border-radius: 2px; background: var(--c); }
+
+  /* ---------- how ---------- */
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; counter-reset: step; }
+  .step { background: var(--card); border: 1px solid var(--rule); border-radius: 12px; padding: 20px; position: relative; }
+  .step::before { counter-increment: step; content: counter(step); display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--bg); font: 600 14px/1 var(--mono); margin-bottom: 14px; }
+  .step:not(:last-child)::after { content: ""; position: absolute; right: -14px; top: 33px; width: 14px; height: 2px; background: var(--rule2); }
+  .step h3 { margin: 0 0 6px; font: 600 19px/1.25 var(--serif); }
+  .step p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .step code { font-family: var(--mono); font-size: 12.5px; background: var(--bg2); padding: 1px 5px; border-radius: 4px; }
+
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .panel { background: var(--card); border: 1px solid var(--rule); border-radius: 12px; padding: 22px 24px; }
+  .panel h3 { margin: 0 0 14px; font: 600 21px/1.2 var(--serif); }
+  .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 11px; font-size: 14.5px; }
+  .checks li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; align-items: start; }
+  .checks li svg { width: 18px; height: 18px; color: var(--good); margin-top: 2px; }
+  .checks b { font-weight: 600; }
+  .checks .d { color: var(--muted); }
+
+  /* ---------- verify ---------- */
+  .code { position: relative; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; }
+  .code pre { margin: 0; padding: 18px 20px; font: 400 13px/1.7 var(--mono); white-space: pre-wrap; word-break: break-all; color: var(--ink); }
+  .code pre .c { color: var(--faint); }
+  .code .iconbtn { position: absolute; top: 10px; right: 10px; }
+
+  footer { margin: 72px 0 0; padding: 26px 0 40px; border-top: 1px solid var(--rule); font-size: 14px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 10px 24px; justify-content: space-between; }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; gap: 28px; padding-top: 40px; }
+    .vrow { grid-template-columns: 34px 110px 1fr; }
+    .vrow .proof { grid-column: 2 / -1; border-top: 1px solid var(--rule); padding-top: 12px; }
+    .flow { grid-template-columns: 1fr 1fr; }
+    .step::after { display: none; }
+    .two { grid-template-columns: 1fr; }
   }
-  h1 { font: 600 clamp(34px, 5vw, 52px)/1.05 "Newsreader", Georgia, serif; margin: 0 0 14px; letter-spacing: -0.01em; }
-  .lede { max-width: 62ch; margin: 0; color: var(--muted); font-size: 18px; }
-  .facts { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 20px; font-size: 14px; color: var(--muted); }
-  .facts b { color: var(--ink); font-weight: 600; }
-
-  h2 { font: 600 26px/1.2 "Newsreader", Georgia, serif; margin: 64px 0 6px; }
-  .sub { margin: 0 0 22px; color: var(--muted); max-width: 70ch; }
-
-  .ledger { border-top: 2px solid var(--ink); }
-  .row {
-    display: grid; grid-template-columns: 110px 1fr 190px; gap: 20px;
-    padding: 22px 0; border-bottom: 1px solid var(--rule); align-items: start;
+  @media (max-width: 600px) {
+    .toplinks { display: none; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .stat .v { font-size: 26px; }
+    .vrow { grid-template-columns: 1fr auto; gap: 12px 14px; padding: 16px; }
+    .vrow .rank { display: none; }
+    .vrow .scorebox { order: 2; text-align: right; min-width: 88px; }
+    .vrow .seller { order: 1; }
+    .vrow .proof { order: 3; grid-column: 1 / -1; }
+    .scorebox .n { font-size: 36px; }
+    .flow { grid-template-columns: 1fr; }
+    h2 { font-size: 26px; }
+    .live .lbl { display: none; }
   }
-  .score { font: 600 54px/0.9 "Newsreader", Georgia, serif; font-variant-numeric: tabular-nums; }
-  .score small { font-size: 18px; color: var(--muted); font-weight: 400; }
-  .row.retired .score { color: var(--bad); text-decoration: line-through; text-decoration-thickness: 3px; }
-  .host { font-weight: 600; font-size: 17px; word-break: break-word; }
-  .path { color: var(--muted); font-size: 14px; word-break: break-all; }
-  .verdict { margin-top: 8px; font-size: 14px; }
-  .verdict.ok { color: var(--good); } .verdict.cut { color: var(--bad); }
-  .proof { font-size: 14px; line-height: 1.7; }
-  .proof span { color: var(--muted); display: block; }
-  .state { padding: 28px 0; color: var(--muted); border-bottom: 1px solid var(--rule); }
-  .state.err { color: var(--bad); }
-
-  .how { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 8px; }
-  .how div { border-top: 1px solid var(--rule); padding-top: 14px; }
-  .how h3 { font: 600 18px/1.3 "Newsreader", Georgia, serif; margin: 0 0 6px; }
-  .how p { margin: 0; color: var(--muted); font-size: 15px; }
-  pre {
-    background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
-    padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.5;
-  }
-  footer { margin-top: 64px; font-size: 14px; color: var(--muted); }
-
-  @media (max-width: 720px) {
-    header { grid-template-columns: 1fr; gap: 18px; }
-    .row { grid-template-columns: 84px 1fr; }
-    .proof { grid-column: 1 / -1; }
-    .score { font-size: 42px; }
-    .how { grid-template-columns: 1fr; }
-  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
   @media (prefers-reduced-motion: no-preference) {
-    .row { animation: strike .45s ease-out both; }
-    @keyframes strike { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .vrow { animation: rise .45s ease-out both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
   }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="coin" aria-hidden="true">Ο</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
+  <symbol id="i-ok" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-gh" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#"><span class="coin-sm" aria-hidden="true"></span>Obol</a>
+    <nav class="toplinks">
+      <a href="#verdicts">Verdicts</a>
+      <a href="#how">How it works</a>
+      <a href="#verify">Verify</a>
+      <a href="https://github.com/Makabeez/obol" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <span class="live" id="live" title="Reads Arc mainnet directly from your browser"><span class="dot" id="live-dot"></span><span class="lbl">Arc mainnet</span><span id="live-block" class="mono">connecting…</span></span>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="hero">
     <div>
+      <div class="eyebrow">x402 buyer agent · live on Arc mainnet</div>
       <h1>Which paid APIs actually deliver?</h1>
-      <p class="lede">Obol is an agent with a USDC budget. It pays x402 services per call on Arc mainnet,
-        scores what comes back, stops paying the ones that fail, and writes each verdict to a public
-        registry any other agent can read before it pays.</p>
-      <div class="facts" id="facts">
-        <span>Network <b>Arc mainnet (5042)</b></span>
-        <span>Registry <b id="f-registry">loading</b></span>
-        <span>Agent <b id="f-agent">loading</b></span>
-        <span id="f-8004-wrap" hidden>ERC-8004 identity <b id="f-8004"></b></span>
+      <p class="lede">Obol holds a USDC budget and pays x402 services per call on Arc. It scores what comes back, moves its spend to the sellers that deliver, stops paying the ones that fail, and writes every verdict, with the payment evidence, to a public registry other agents can check before they pay.</p>
+      <div class="ctas">
+        <a class="btn primary" href="#verdicts">See the verdicts</a>
+        <a class="btn" id="cta-registry" href="#" target="_blank" rel="noopener">Registry on explorer <svg><use href="#i-ext"/></svg></a>
+        <a class="btn" href="https://github.com/Makabeez/obol" target="_blank" rel="noopener"><svg><use href="#i-gh"/></svg> Source</a>
       </div>
     </div>
-  </header>
-
-  <h2>Verdicts on Arc</h2>
-  <p class="sub">Read live from the registry contract in your browser. Each score links to the
-    registry write, and to the payment it was based on.</p>
-  <div class="ledger" id="ledger"><div class="state">Reading the registry on Arc…</div></div>
-
-  <h2>How a verdict is made</h2>
-  <div class="how">
-    <div><h3>Pay</h3><p>The agent pays the seller's HTTP 402 challenge in USDC on Arc, by EIP-3009
-      transfer or through Circle Gateway. It only pays allowlisted sellers at pinned addresses, under
-      per-call and lifetime caps.</p></div>
-    <div><h3>Score</h3><p>It checks the response: did it arrive, is it complete, how fast, and for chain
-      data, how far behind the live Arc head it is. Stale or empty data scores low.</p></div>
-    <div><h3>Record</h3><p>A Thompson-sampling allocator moves spend toward sellers that deliver value per
-      USDC. Sellers that keep failing are retired on-chain, with the evidence attached.</p></div>
+    <aside class="idcard" aria-label="Agent identity">
+      <div class="coin" aria-hidden="true">Ο</div>
+      <h3>Obol agent</h3>
+      <div class="role">Autonomous buyer · pays in USDC on Arc</div>
+      <dl class="kv">
+        <dt>Network</dt><dd>Arc mainnet · 5042</dd>
+        <dt>ERC-8004 identity</dt><dd id="f-8004">—</dd>
+        <dt>Agent wallet</dt><dd id="f-agent">—</dd>
+        <dt>Wallet balance</dt><dd id="f-bal">—</dd>
+        <dt>Registry</dt><dd id="f-registry">—</dd>
+      </dl>
+    </aside>
   </div>
 
-  <h2>Check it yourself</h2>
-  <p class="sub">Nothing here needs trust in this page. Read the same data with Foundry:</p>
-  <pre id="verify">cast call &lt;registry&gt; "providerCount()(uint256)" --rpc-url https://rpc.mainnet.arc.io</pre>
+  <div class="stats" aria-live="polite">
+    <div class="stat"><div class="v" id="s-sellers">–</div><div class="l">Sellers scored</div></div>
+    <div class="stat"><div class="v" id="s-calls">–</div><div class="l">Calls behind the scores</div></div>
+    <div class="stat"><div class="v" id="s-active">–</div><div class="l">Active / retired</div></div>
+    <div class="stat"><div class="v" id="s-last">–</div><div class="l">Last verdict on-chain</div></div>
+  </div>
+
+  <section id="verdicts">
+    <div class="sec-head">
+      <div>
+        <h2>Verdicts on Arc</h2>
+        <p class="sub">Read live from the registry contract, in your browser. Each score links to the registry write and to the payment it was based on.</p>
+      </div>
+      <div class="meta"><span id="read-meta"></span><button class="iconbtn" id="refresh" type="button"><svg><use href="#i-refresh"/></svg>Refresh</button></div>
+    </div>
+    <div id="notice"></div>
+    <div class="ledger" id="ledger">
+      <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+    </div>
+    <div class="legend">
+      <span><i class="sw" style="--c:var(--good)"></i>75+ delivers</span>
+      <span><i class="sw" style="--c:var(--warn)"></i>50–74 mixed</span>
+      <span><i class="sw" style="--c:var(--bad)"></i>under 50 not worth paying</span>
+      <span>Score = delivery, completeness, latency and, for chain data, freshness against the live Arc head.</span>
+    </div>
+  </section>
+
+  <section id="how">
+    <div class="sec-head"><div>
+      <h2>How a verdict is made</h2>
+      <p class="sub">Every step runs on Arc mainnet with real USDC. Nothing on this page is simulated.</p>
+    </div></div>
+    <div class="flow">
+      <div class="step"><h3>Ask</h3><p>The agent calls a paid API. The seller answers <code>HTTP 402</code> with a price, a recipient and the Arc USDC contract.</p></div>
+      <div class="step"><h3>Pay</h3><p>The sidecar checks the seller is allowlisted, the recipient is pinned and the price is under the caps, then pays in USDC by EIP-3009 or Circle Gateway.</p></div>
+      <div class="step"><h3>Score</h3><p>It grades the response: arrived, complete, fast, and for chain data how far behind the Arc head it is. A Thompson-sampling allocator shifts budget to value per USDC.</p></div>
+      <div class="step"><h3>Publish</h3><p>The score goes to the ReputationRegistry with its evidence: an Arc tx hash, a Gateway transfer id, or proof nothing was charged.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="two">
+      <div class="panel">
+        <h3>Why it can't overspend</h3>
+        <ul class="checks">
+          <li><svg><use href="#i-ok"/></svg><span><b>One key holder.</b> <span class="d">Only a local sidecar signs payments; the scoring brain never sees the key.</span></span></li>
+          <li><svg><use href="#i-ok"/></svg><span><b>Allowlist and pinned recipients.</b> <span class="d">Unknown sellers and changed payTo addresses are refused.</span></span></li>
+          <li><svg><use href="#i-ok"/></svg><span><b>Arc and USDC only.</b> <span class="d">Any other chain or asset in a 402 challenge is rejected.</span></span></li>
+          <li><svg><use href="#i-ok"/></svg><span><b>Per-call and lifetime caps.</b> <span class="d">The lifetime cap is persisted, so a restart doesn't reset it.</span></span></li>
+          <li><svg><use href="#i-ok"/></svg><span><b>One payment in flight.</b> <span class="d">No double spends from parallel requests.</span></span></li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>What Arc does here</h3>
+        <ul class="checks">
+          <li><svg><use href="#i-ok"/></svg><span><b>USDC settlement.</b> <span class="d">Every paid call settles on Arc, over both Circle rails: EIP-3009 and Gateway.</span></span></li>
+          <li><svg><use href="#i-ok"/></svg><span><b>USDC as gas.</b> <span class="d">A score write costs about 0.001 USDC on mainnet, cheap enough to publish every verdict.</span></span></li>
+          <li><svg><use href="#i-ok"/></svg><span><b>Sub-second finality.</b> <span class="d">A verdict is final before the next purchase decision.</span></span></li>
+          <li><svg><use href="#i-ok"/></svg><span><b>ERC-8004 identity.</b> <span class="d">Registered in the canonical IdentityRegistry on Arc.</span></span></li>
+          <li><svg><use href="#i-ok"/></svg><span><b>CCTP v2.</b> <span class="d">The agent is funded from Base with Circle's Bridge Kit.</span></span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="verify">
+    <div class="sec-head"><div>
+      <h2>Check it yourself</h2>
+      <p class="sub">You don't need to trust this page. Read the same data with Foundry:</p>
+    </div></div>
+    <div class="code">
+      <button class="iconbtn" id="copy-verify" type="button"><svg><use href="#i-copy"/></svg>Copy</button>
+      <pre id="verify-code"></pre>
+    </div>
+  </section>
 
   <footer>
-    Source: <a href="https://github.com/Makabeez/obol">github.com/Makabeez/obol</a> (MIT).
-    Built by <a href="https://github.com/Makabeez">Makabeez</a>.
+    <span>Source: <a href="https://github.com/Makabeez/obol" target="_blank" rel="noopener">github.com/Makabeez/obol</a> (MIT) · Built by <a href="https://github.com/Makabeez" target="_blank" rel="noopener">Makabeez</a></span>
+    <span id="foot-rpc">Reads Arc mainnet via rpc.mainnet.arc.io, falls back to dRPC</span>
   </footer>
-</div>
+</main>
 
 <script src="./reader.js"></script>
 <script>
-  // Filled in after mainnet deploy (see docs/MAINNET.md). ?registry=0x... overrides for testing.
+  // Mainnet config. ?registry=0x... overrides for testing; ?rpc=http://127.0.0.1:PORT for local fork tests only.
   const CONFIG = {
-    rpc: "https://rpc.mainnet.arc.io",
+    rpcs: ["https://rpc.mainnet.arc.io", "https://arc.drpc.org"],
     explorer: "https://explorer.arc.io",
     registry: "0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE",
     agent: "0x4a36Df350507d974C882Ac89f402215340d67f55",
     agentId: "345",
     identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
+    refreshMs: 60000,
   };
   const q = new URLSearchParams(location.search);
   if (/^0x[0-9a-fA-F]{40}$/.test(q.get("registry") || "")) CONFIG.registry = q.get("registry");
-  if (/^http:\/\/127\.0\.0\.1:\d+$/.test(q.get("rpc") || "")) CONFIG.rpc = q.get("rpc"); // local fork testing only
+  if (/^http:\/\/127\.0\.0\.1:\d+$/.test(q.get("rpc") || "")) CONFIG.rpcs = [q.get("rpc")];
 
   const $ = (id) => document.getElementById(id);
-  const short = (a) => a.slice(0, 6) + "…" + a.slice(-4);
+  const short = (a, n = 6) => a.slice(0, n) + "…" + a.slice(-4);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const link = (path, text) => `<a href="${CONFIG.explorer}/${path}" target="_blank" rel="noopener">${esc(text)}</a>`;
+  const ext = '<svg class="ext"><use href="#i-ext"/></svg>';
+  const xlink = (path, text, cls = "") => `<a class="${cls}" href="${CONFIG.explorer}/${path}" target="_blank" rel="noopener">${text}</a>`;
+  const CACHE_KEY = "obol:v2:" + CONFIG.registry.toLowerCase();
 
-  function evidenceHtml(ev) {
-    if (!ev) return "<span>No evidence attached</span>";
-    if (/^0x[0-9a-fA-F]{64}$/.test(ev)) return link("tx/" + ev, "Payment tx " + short(ev));
-    if (ev.startsWith("gateway:")) return `<span>Paid via Circle Gateway, transfer ${esc(ev.slice(8, 26))}</span>`;
-    const m = ev.match(/^no-payment:http-(\d+)/);
-    if (m) return `<span>Seller answered HTTP ${m[1]}, nothing was charged</span>`;
-    return `<span>${esc(ev)}</span>`;
+  function ago(ts) {
+    const s = Math.max(0, Math.floor(Date.now() / 1000 - ts));
+    if (s < 60) return s + "s ago";
+    if (s < 3600) return Math.floor(s / 60) + "m ago";
+    if (s < 86400) return Math.floor(s / 3600) + "h ago";
+    return Math.floor(s / 86400) + "d ago";
   }
-  function when(ts) {
-    const d = new Date(ts * 1000);
-    return d.toISOString().slice(0, 16).replace("T", " ") + " UTC";
-  }
+  const utc = (ts) => new Date(ts * 1000).toISOString().slice(0, 16).replace("T", " ") + " UTC";
+  const band = (bps) => (bps >= 7500 ? "good" : bps >= 5000 ? "warn" : "bad");
 
-  async function main() {
-    const ok = /^0x[0-9a-fA-F]{40}$/;
-    $("f-registry").innerHTML = ok.test(CONFIG.registry) ? link("address/" + CONFIG.registry, short(CONFIG.registry)) : "not deployed yet";
-    $("f-agent").innerHTML = ok.test(CONFIG.agent) ? link("address/" + CONFIG.agent, short(CONFIG.agent)) : "not set";
-    if (/^\d+$/.test(CONFIG.agentId)) {
-      $("f-8004-wrap").hidden = false;
-      $("f-8004").innerHTML = link("address/" + CONFIG.identityRegistry, "#" + CONFIG.agentId);
+  function rail(ev) {
+    if (!ev) return { badge: "", proof: "" };
+    if (/^0x[0-9a-fA-F]{64}$/.test(ev)) return {
+      badge: '<span class="badge b-gold">EIP-3009 · settled on Arc</span>',
+      proof: xlink("tx/" + ev, `<span class="k">Payment</span><span class="val">${short(ev, 10)}</span>${ext}`),
+    };
+    if (ev.startsWith("gateway:")) {
+      const id = ev.slice(8);
+      return {
+        badge: '<span class="badge b-gold">Circle Gateway</span>',
+        proof: `<span class="pl"><span class="k">Gateway transfer</span><span class="val" title="${esc(id)}">${esc(id.slice(0, 13))}…</span><button class="copy" type="button" data-copy="${esc(id)}" aria-label="Copy transfer id"><svg><use href="#i-copy"/></svg></button></span>`,
+      };
     }
-    if (!ok.test(CONFIG.registry)) {
-      $("ledger").innerHTML = '<div class="state">The registry address is not configured on this page yet.</div>';
+    const m = ev.match(/^no-payment:http-(\d+)/);
+    if (m) return {
+      badge: `<span class="badge b-plain">Unpaid · HTTP ${m[1]}</span>`,
+      proof: `<span class="pl"><span class="k">Seller failed, nothing charged</span></span>`,
+    };
+    return { badge: "", proof: `<span class="pl"><span class="val">${esc(ev)}</span></span>` };
+  }
+
+  function renderStatic() {
+    const ok = /^0x[0-9a-fA-F]{40}$/;
+    $("f-registry").innerHTML = xlink("address/" + CONFIG.registry, `<span class="mono">${short(CONFIG.registry)}</span>`);
+    $("cta-registry").href = `${CONFIG.explorer}/address/${CONFIG.registry}`;
+    $("f-agent").innerHTML = ok.test(CONFIG.agent) ? xlink("address/" + CONFIG.agent, `<span class="mono">${short(CONFIG.agent)}</span>`) : "—";
+    if (/^\d+$/.test(CONFIG.agentId)) $("f-8004").innerHTML = xlink(`token/${CONFIG.identityRegistry}/instance/${CONFIG.agentId}`, "#" + CONFIG.agentId);
+    const r = CONFIG.rpcs[0];
+    $("verify-code").innerHTML =
+      `<span class="c"># how many sellers have a verdict</span>\n` +
+      `cast call ${CONFIG.registry} "providerCount()(uint256)" --rpc-url ${r}\n\n` +
+      `<span class="c"># the id of seller 0</span>\n` +
+      `cast call ${CONFIG.registry} "providerIdAt(uint256)(bytes32)" 0 --rpc-url ${r}\n\n` +
+      `<span class="c"># its score: (scoreBps, calls, updatedAt, updatedBlock, retired, evidenceHash)</span>\n` +
+      `cast call ${CONFIG.registry} "scoreOf(bytes32)((uint16,uint64,uint64,uint64,bool,bytes32))" &lt;id&gt; --rpc-url ${r}`;
+  }
+
+  function render(data, { fromCache = false } = {}) {
+    const rows = [...data.rows].sort((a, b) => (a.retired - b.retired) || (b.scoreBps - a.scoreBps));
+    const calls = rows.reduce((s, r) => s + r.calls, 0);
+    const retired = rows.filter((r) => r.retired).length;
+    const last = Math.max(0, ...rows.map((r) => r.updatedAt));
+    $("s-sellers").textContent = rows.length;
+    $("s-calls").textContent = calls;
+    $("s-active").textContent = `${rows.length - retired} / ${retired}`;
+    $("s-last").textContent = last ? ago(last) : "—";
+    $("s-last").title = last ? utc(last) : "";
+    if (data.agentBalance != null) $("f-bal").textContent = data.agentBalance.toFixed(4) + " USDC";
+    if (data.head) { $("live-block").textContent = "#" + data.head.toLocaleString("en-US"); }
+
+    if (!rows.length) {
+      $("ledger").innerHTML = '<div class="panel">No verdicts yet. The agent has not written its first score.</div>';
       return;
     }
-    $("verify").textContent =
-      `cast call ${CONFIG.registry} "providerCount()(uint256)" --rpc-url ${CONFIG.rpc}\n` +
-      `cast call ${CONFIG.registry} "providerIdAt(uint256)(bytes32)" 0 --rpc-url ${CONFIG.rpc}\n` +
-      `cast call ${CONFIG.registry} "scoreOf(bytes32)((uint16,uint64,uint64,uint64,bool,bytes32))" <id> --rpc-url ${CONFIG.rpc}`;
+    $("ledger").innerHTML = rows.map((r, i) => {
+      let host = r.uri, path = "";
+      try { const u = new URL(r.uri); host = u.host; path = u.pathname; } catch {}
+      const b = band(r.scoreBps);
+      const rl = rail(r.evidence);
+      const status = r.retired
+        ? '<span class="badge b-bad">Retired · not worth paying</span>'
+        : `<span class="badge ${b === "bad" ? "b-bad" : "b-good"}">${b === "bad" ? "Active · scored low" : "Active"}</span>`;
+      return `<article class="vrow${r.retired ? " retired" : ""}">
+        <div class="rank">${String(i + 1).padStart(2, "0")}</div>
+        <div class="scorebox band-${b}"><div class="n">${Math.round(r.scoreBps / 100)}<small>/100</small></div><div class="bar"><i data-w="${r.scoreBps / 100}"></i></div></div>
+        <div class="seller"><div class="host">${esc(host)}</div><div class="path">${esc(path)}</div>
+          <div class="badges">${status}${rl.badge}<span class="badge b-plain">${r.calls} call${r.calls === 1 ? "" : "s"}</span></div></div>
+        <div class="proof">
+          ${r.writeTx ? xlink("tx/" + r.writeTx, `<span class="k">Registry write</span><span class="val">${short(r.writeTx, 10)}</span>${ext}`) : '<span class="pl"><span class="k">Registry write: lookup pending</span></span>'}
+          ${rl.proof}
+          <span class="when" title="${utc(r.updatedAt)}">Updated ${ago(r.updatedAt)} · block ${r.updatedBlock.toLocaleString("en-US")}</span>
+        </div></article>`;
+    }).join("");
+    requestAnimationFrame(() => document.querySelectorAll(".bar i").forEach((el) => { el.style.width = el.dataset.w + "%"; }));
+
+    $("notice").innerHTML = fromCache
+      ? '<div class="notice soft">Showing the last verdicts this browser read. Refreshing from Arc…</div>'
+      : (!data.evidenceOk ? '<div class="notice soft">Scores are live. Some payment evidence could not be fetched right now; refresh to try again.</div>' : "");
+  }
+
+  let loading = false, lastRead = 0;
+  async function load({ quiet = false } = {}) {
+    if (loading) return;
+    loading = true;
+    $("refresh").classList.add("spin");
     try {
-      const { rows } = await ObolReader.readRegistry(CONFIG.rpc, CONFIG.registry);
-      if (!rows.length) {
-        $("ledger").innerHTML = '<div class="state">No verdicts yet. The agent has not written its first score.</div>';
-        return;
-      }
-      rows.sort((a, b) => (a.retired - b.retired) || (b.scoreBps - a.scoreBps));
-      $("ledger").innerHTML = rows.map((r) => {
-        let host = r.uri, path = "";
-        try { const u = new URL(r.uri); host = u.host; path = u.pathname; } catch {}
-        const verdict = r.retired
-          ? `<div class="verdict cut">Retired after ${r.calls} call${r.calls === 1 ? "" : "s"}: not worth paying</div>`
-          : `<div class="verdict ok">Active, scored on ${r.calls} call${r.calls === 1 ? "" : "s"}</div>`;
-        return `<div class="row${r.retired ? " retired" : ""}">
-          <div class="score">${Math.round(r.scoreBps / 100)}<small>/100</small></div>
-          <div><div class="host">${esc(host)}</div><div class="path">${esc(path)}</div>${verdict}</div>
-          <div class="proof">
-            ${r.writeTx ? link("tx/" + r.writeTx, "Registry write " + short(r.writeTx)) : "<span>Write tx not found</span>"}
-            ${evidenceHtml(r.evidence)}
-            <span>${when(r.updatedAt)}</span>
-          </div></div>`;
-      }).join("");
+      const data = await ObolReader.readRegistry(CONFIG.rpcs, CONFIG.registry, { agent: CONFIG.agent });
+      render(data);
+      lastRead = Date.now();
+      $("live-dot").className = "dot on";
+      const host = (data.stats.rpcs[0] || CONFIG.rpcs[0]).replace(/^https?:\/\//, "");
+      $("foot-rpc").textContent = `Read from Arc mainnet via ${host}` + (data.stats.retries ? ` (${data.stats.retries} rate-limit retr${data.stats.retries === 1 ? "y" : "ies"} absorbed)` : "");
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ at: Date.now(), data })); } catch {}
     } catch (e) {
-      $("ledger").innerHTML = `<div class="state err">Could not read the registry from ${esc(CONFIG.rpc)}: ${esc(e.message)}. Reload to retry.</div>`;
+      $("live-dot").className = "dot err";
+      if (!quiet || !lastRead) {
+        const hasRows = !!document.querySelector(".vrow");
+        $("notice").innerHTML = `<div class="notice"><span>Couldn't reach Arc mainnet right now (${esc(e.message)}).${hasRows ? " Showing the last good read." : ""}</span><button class="iconbtn" type="button" onclick="load()">Try again</button></div>`;
+        if (!hasRows) $("ledger").innerHTML = "";
+      }
+    } finally {
+      loading = false;
+      $("refresh").classList.remove("spin");
+      tick();
     }
   }
-  main();
+  function tick() { $("read-meta").textContent = lastRead ? `Read ${Math.round((Date.now() - lastRead) / 1000)}s ago` : ""; }
+
+  document.addEventListener("click", async (ev) => {
+    const btn = ev.target.closest("[data-copy], #copy-verify");
+    if (!btn) return;
+    const text = btn.id === "copy-verify" ? $("verify-code").textContent : btn.dataset.copy;
+    try { await navigator.clipboard.writeText(text); } catch { return; }
+    const old = btn.innerHTML;
+    btn.innerHTML = '<svg><use href="#i-ok"/></svg>' + (btn.id === "copy-verify" ? "Copied" : "");
+    setTimeout(() => { btn.innerHTML = old; }, 1400);
+  });
+  $("refresh").addEventListener("click", () => load());
+
+  renderStatic();
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+    if (c && c.data && c.data.rows) render(c.data, { fromCache: true });
+  } catch {}
+  load();
+  setInterval(tick, 5000);
+  setInterval(() => { if (document.visibilityState === "visible") load({ quiet: true }); }, CONFIG.refreshMs);
 </script>
 </body>
 </html>

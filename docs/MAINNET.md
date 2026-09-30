@@ -10,7 +10,7 @@ Everything here was checked against Arc mainnet on 2026-09-19. Commands assume t
 | Chain | Arc mainnet, chain id `5042`, RPC `https://rpc.mainnet.arc.io` (alt: `rpc.drpc.mainnet.arc.io`, `rpc.quicknode.mainnet.arc.io`, `rpc.blockdaemon.mainnet.arc.io`) |
 | Explorer | `https://explorer.arc.io` |
 | USDC | ERC-20 view `0x3600000000000000000000000000000000000000` (6 decimals); native gas balance uses 18 decimals |
-| Gas | ~20 gwei floor. Registry deploy ≈ 736k gas (~0.015 USDC); a score write ≈ 75k–160k gas (~0.002–0.003 USDC) |
+| Gas | ~20 gwei floor. Registry deploy ≈ 736k gas (~0.015 USDC); measured on mainnet: a score write ≈ 42k–76k gas (~0.0008–0.0015 USDC), a first-time `describe` ≈ 144k–161k gas (~0.003 USDC) |
 | `eth_getLogs` | primary RPC rejects ranges ≥ 10,000 blocks (Arc ≈ 0.5 s/block) — the dashboard reads single blocks only |
 | Circle Gateway | GatewayWallet `0x77777777Dcc4d5A8B6E418Fd04D8997ef11000eE` (Arc, domain 26) |
 | CCTP v2 | TokenMessengerV2 `0x28b5a0e9C621a5BadaA536219b3a228C8168cf5d` on Arc and Base; Bridge Kit Base→Arc supports Circle's forwarder (Circle submits the Arc mint) |
@@ -138,7 +138,7 @@ cast send 0x3600000000000000000000000000000000000000 "transfer(address,uint256)"
 |---|---|
 | Registry deploy | ~0.015 |
 | ERC-8004 register | ~0.01 |
-| Score writes | ~0.003 each |
+| Score writes | ~0.001 each (first write per seller ~0.0015, updates ~0.0008) |
 | Seller payments | ≤ 0.05 per run, ≤ 1.00 lifetime (cap) |
 | Bridge fee (FAST + forwarder) | printed by the dry run in step 4 (CCTP fee on 10 USDC ≈ 0.0004 + forwarder fee) |
 
