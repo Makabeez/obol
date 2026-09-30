@@ -143,3 +143,16 @@ cast send 0x3600000000000000000000000000000000000000 "transfer(address,uint256)"
 | Bridge fee (FAST + forwarder) | printed by the dry run in step 4 (CCTP fee on 10 USDC ≈ 0.0004 + forwarder fee) |
 
 Everything else stays on the agent wallet and can be sent back.
+
+## Cross-run history (runs/state.json)
+
+Each run starts from the accumulated record, never a blank prior. At startup the agent reads
+`runs/state.json` (exact local stats, incl. delivery counts) and its own on-chain record via the
+sidecar's read-only `GET /reputation/<id>`, reconciles them (the chain wins if it is ahead), and
+applies the retire rule to the cumulative evidence. Scores and call counts written on-chain are
+cumulative. `runs/state.json` is written at the end of every live run and is git-ignored.
+
+One-off repair, if a run ever overwrote history (dry run first):
+
+    .venv/bin/python -m obol.cli repair --runs runs/first.json runs/run2.json
+    .venv/bin/python -m obol.cli repair --runs runs/first.json runs/run2.json --send

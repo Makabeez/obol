@@ -6,6 +6,7 @@
 //   GET  /health                 -> { ok, chainId, address, registry, providers }
 //   GET  /balance                -> { wallet, gateway, spent, limit, remaining, payments }
 //   POST /pay  {providerId}      -> { ok, paid, httpStatus, amountUsdc, scheme, evidence, latencyMs, body }
+//   GET  /reputation/:providerId -> { scoreBps, calls, updatedAt, updatedBlock, retired }   (read-only)
 //   POST /reputation {providerId, scoreBps, calls, retire, evidence} -> { txHash }
 //
 // Payments: one x402 client, two rails, Arc mainnet (eip155:5042) only:
@@ -257,6 +258,9 @@ export const REGISTRY_ABI = [
     inputs: [{ type: "bytes32" }, { type: "string" }], outputs: [] },
   { type: "function", name: "uriOf", stateMutability: "view",
     inputs: [{ type: "bytes32" }], outputs: [{ type: "string" }] },
+  { type: "function", name: "scoreOf", stateMutability: "view",
+    inputs: [{ type: "bytes32" }],
+    outputs: [{ type: "uint16" }, { type: "uint64" }, { type: "uint64" }, { type: "uint64" }, { type: "bool" }, { type: "bytes32" }] },
 ];
 export const providerKey = (id) => keccak256(stringToBytes(id));
 
@@ -285,6 +289,18 @@ async function handleReputation({ providerId, scoreBps, calls, retire, evidence 
   });
 }
 
+// Read-only: the agent's own on-chain record for one allowlisted provider, so each run
+// starts from the published history instead of overwriting it.
+async function handleReadReputation(providerId) {
+  if (!REGISTRY) throw new HttpError(503, "REPUTATION_CONTRACT not set");
+  if (!PROVIDERS.has(providerId)) throw new HttpError(403, `provider not in allowlist: ${providerId}`);
+  const [scoreBps, calls, updatedAt, updatedBlock, retired] = await publicClient.readContract({
+    address: REGISTRY, abi: REGISTRY_ABI, functionName: "scoreOf", args: [providerKey(providerId)],
+  });
+  return { providerId, scoreBps: Number(scoreBps), calls: Number(calls), updatedAt: Number(updatedAt),
+           updatedBlock: Number(updatedBlock), retired: Boolean(retired) };
+}
+
 // ---- HTTP plumbing -----------------------------------------------------------------
 function readJson(req) {
   return new Promise((resolve, reject) => {
@@ -310,6 +326,8 @@ const server = http.createServer(async (req, res) => {
                               registry: REGISTRY || null, providers: [...PROVIDERS.keys()] });
     if (req.method === "GET" && req.url === "/balance") return send(res, 200, await handleBalance());
     if (req.method === "POST" && req.url === "/pay") return send(res, 200, await handlePay(await readJson(req)));
+    if (req.method === "GET" && req.url.startsWith("/reputation/"))
+      return send(res, 200, await handleReadReputation(decodeURIComponent(req.url.slice("/reputation/".length))));
     if (req.method === "POST" && req.url === "/reputation") return send(res, 200, await handleReputation(await readJson(req)));
     return send(res, 404, { ok: false, error: "not found" });
   } catch (e) {

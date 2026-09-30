@@ -141,12 +141,21 @@ class ValueBandit:
             arm.alpha = 1.0 + (arm.alpha - 1.0) * self.decay
             arm.beta = 1.0 + (arm.beta - 1.0) * self.decay
 
-    def observe(self, provider_id: str, quality: float, paid: float, delivered: bool = True) -> None:
+    def seed(self, provider_id: str, alpha: float, beta: float, calls: int, seen: int,
+             delivered: int, spend_usdc: float = 0.0, retired: bool = False) -> None:
+        """Start an arm from accumulated history (previous runs / the on-chain record)
+        instead of the blank Beta(1,1) prior."""
         arm = self.arms[provider_id]
-        self._decay_arm(arm)
-        arm.update(quality, paid, delivered)
+        arm.alpha, arm.beta = max(1e-6, float(alpha)), max(1e-6, float(beta))
+        arm.calls, arm.seen, arm.delivered = int(calls), int(seen), int(delivered)
+        arm.spend_usdc = float(spend_usdc)
+        arm.retired = bool(retired)
+
+    def should_retire(self, provider_id: str) -> bool:
+        """The cut-off rule, applied to everything known about the arm so far."""
+        arm = self.arms[provider_id]
         if arm.seen < self.explore_rounds:
-            return
+            return False
         # Retirement is for providers that fail to DELIVER -- scammers that take payment
         # and return nothing. This uses non-decaying delivery counts, so the verdict is
         # sticky: a confirmed rug stays cut even as the adaptive layer keeps re-evaluating
@@ -156,7 +165,13 @@ class ValueBandit:
         # Edge gate stays as a guard against a provider that delivers but is hopelessly
         # overpriced relative to the value it returns.
         edge_fail = arm.edge_ucb(self.cutoff_confidence) < self.min_edge
-        if delivery_fail or edge_fail:
+        return delivery_fail or edge_fail
+
+    def observe(self, provider_id: str, quality: float, paid: float, delivered: bool = True) -> None:
+        arm = self.arms[provider_id]
+        self._decay_arm(arm)
+        arm.update(quality, paid, delivered)
+        if self.should_retire(provider_id):
             arm.retired = True
 
     def quality_bps(self, provider_id: str) -> int:

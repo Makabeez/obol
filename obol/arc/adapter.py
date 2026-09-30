@@ -57,3 +57,8 @@ class ArcAdapter(ABC):
                          retire: bool = False, evidence: str = "") -> PaymentReceipt:
         """Record a provider's delivered-quality score (and retirement) on-chain."""
         ...
+
+    def read_reputation(self, provider_id: str) -> dict | None:
+        """The agent's own on-chain record for a provider, or None if unavailable.
+        Default: no chain to read (simulation)."""
+        return None

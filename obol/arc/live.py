@@ -6,6 +6,7 @@ lifetime caps). This adapter only asks it to pay a provider *by id*.
 
     GET  /health    GET /balance
     POST /pay        {providerId}  -> {ok, paid, httpStatus, amountUsdc, scheme, evidence, latencyMs, body}
+    GET  /reputation/<id> -> {scoreBps, calls, updatedAt, updatedBlock, retired}   (read-only)
     POST /reputation {providerId, scoreBps, calls, retire, evidence} -> {txHash}
 
 Start the sidecar first:  cd sidecar && node --env-file=.env payer.mjs
@@ -16,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import urllib.error
+import urllib.parse
 import urllib.request
 
 from .adapter import ArcAdapter, FetchResult, PaymentReceipt
@@ -99,6 +101,14 @@ class LiveArcAdapter(ArcAdapter):
                            refused=refused, evidence=evidence, http_status=status)
 
     # ---- on-chain reputation (REAL Arc tx) --------------------------------
+    def read_reputation(self, provider_id: str) -> dict | None:
+        try:
+            out = self._get("/reputation/" + urllib.parse.quote(provider_id, safe=""))
+        except Exception as e:
+            print(f"  !  could not read on-chain record for {provider_id}: {e}")
+            return None
+        return out if "calls" in out else None
+
     def write_reputation(self, provider_id: str, score_bps: int, calls: int = 0,
                          retire: bool = False, evidence: str = "") -> PaymentReceipt:
         out = self._post("/reputation", {
