@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Live scores (dashboard)
+    url: https://obol-arc.vercel.app
+    about: Every seller Obol has paid and scored on Arc mainnet, read straight from the chain.
+  - name: Read scores in your own agent (obol-kit)
+    url: https://github.com/Makabeez/obol-kit
+    about: checkBeforePay() — check a seller's on-chain record before you pay it.

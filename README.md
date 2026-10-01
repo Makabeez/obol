@@ -43,6 +43,39 @@ Every registry write carries its evidence (`0x…` tx hash, `gateway:<transfer i
 
 The Lepton (testnet) deployment `0xd893…9d70` remains on Arc testnet for history.
 
+<p align="center"><img src="./assets/how-it-works.svg" alt="How Obol works: pays x402 sellers per call, scores them, writes the verdict on-chain, other agents read it before paying" width="100%" /></p>
+
+---
+
+## Get scored by Obol
+
+**Run a paid x402 endpoint on Arc mainnet? Obol will pay it per call and publish its score on-chain, with receipts.**
+
+**→ [Open a "Get scored" issue](https://github.com/Makabeez/obol/issues/new?template=get-scored.yml)**, or DM [@GeiserJoe2](https://x.com/GeiserJoe2) / `Makabeez` on the Canteen Discord, with three things: your endpoint URL, your price per call (up to 0.01 USDC), and your payTo address.
+
+What you get:
+
+- **Real paid calls** in USDC on Arc mainnet, from an agent with an ERC-8004 identity (#345)
+- **A public score with receipts**: every write stores the payment it is based on (Arc tx hash or Gateway transfer id) and your endpoint URL, on-chain
+- **A spot on the live dashboard**, which picks up new sellers from the chain automatically
+- **Visibility to every agent that checks the registry before paying**: a good score means more buyers
+
+Your endpoint needs x402 v2 on Arc mainnet (`eip155:5042`, Arc USDC), via `exact` (EIP-3009) and/or Circle Gateway batched. Scoring is based only on what Obol can verify itself (delivery, promised fields, latency, freshness of Arc data). Sellers that keep failing are retired, and retirement is reversible once fixed. Full rules and the onboarding checklist: **[docs/GET-SCORED.md](docs/GET-SCORED.md)**.
+
+## Read the registry before you pay
+
+The registry is public: any agent can check a seller before it spends. **[obol-kit](https://github.com/Makabeez/obol-kit)** packages that as one call (plus the pay-before-attest writer, if you want to run your own registry):
+
+```js
+import { checkBeforePay } from "obol-kit/reader";   // npm i github:Makabeez/obol-kit
+
+const v = await checkBeforePay("exa-search", { minScoreBps: 5000, minCalls: 3 });
+// { pay: true,  reason: "score 72.19/100 over 7 calls", record: {...} }
+// checkBeforePay("cra-selftest-fail") -> { pay: false, reason: "retired on-chain after 3 calls (score 20/100)" }
+```
+
+No key, no backend: two `eth_call`s against Arc mainnet, plus a single-block `eth_getLogs` if you want the evidence behind the score.
+
 ---
 
 ## Why
@@ -73,13 +106,13 @@ It also produces a public good. Each thing Obol learns — *this provider delive
                                          v
    +--------------+        +-----------------------------+        +------------------+
    |  Evaluator   | <----- |         Arc adapter         | -----> |  Reputation      |
-   | prog + LLM*  | result | sim:// now   live: Circle    | score  |  Registry (Arc)  |
-   +--------------+        | Wallets / Gateway / x402     |        +------------------+
+   | prog + LLM*  | result | sim (no creds) | live: x402 | score  |  Registry (Arc)  |
+   +--------------+        | sidecar, exact + Gateway    |        +------------------+
                           +-----------------------------+
         * LLM judge is Anthropic-only (wallet-adjacent decision; never a 3rd-party model).
 ```
 
-One seam — the **Arc adapter** — separates the brain from the chain. `SimArcAdapter` runs anywhere with no creds, so the allocation logic is built and demoed today. `LiveArcAdapter` wires the identical interface to a Circle agent wallet + x402 settlement on Arc. Flipping `--sim` to `--live` changes no call sites.
+One seam — the **Arc adapter** — separates the brain from the chain. `SimArcAdapter` runs anywhere with no creds, so the allocation logic can be tested and demoed offline. `LiveArcAdapter` drives the same interface through the local sidecar (`sidecar/payer.mjs`), which holds the key and pays x402 sellers on Arc mainnet. Flipping `--sim` to `--live` changes no call sites.
 
 ## Tech stack
 
@@ -126,8 +159,8 @@ pip install -r requirements.txt
 # run the buyer against simulated sellers (no creds needed)
 python -m obol.cli run --sim --budget 2 --seed 7 --min-edge 0.05
 
-# watch it spend live in the browser (self-driving sim agent)
-python -m uvicorn dashboard.server:app --port 8099
+# the dashboard is a static page that reads Arc mainnet straight from your browser
+python -m http.server 8099 -d site
 # open http://localhost:8099
 
 # tests (the allocator is the differentiator, so it carries the real ones)

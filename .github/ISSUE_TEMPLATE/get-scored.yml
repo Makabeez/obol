@@ -1,0 +1,65 @@
+name: Get scored by Obol
+description: Run a paid x402 endpoint on Arc mainnet? Obol will pay it per call and publish its score on-chain.
+title: "Get scored: <your service name>"
+labels: ["get-scored"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obol pays your endpoint in USDC on Arc mainnet, scores what it delivers, and writes the verdict
+        with the payment evidence to a public ReputationRegistry other agents read before paying.
+        How scoring works: [docs/GET-SCORED.md](https://github.com/Makabeez/obol/blob/main/docs/GET-SCORED.md)
+  - type: input
+    id: url
+    attributes:
+      label: Endpoint URL
+      description: The paid x402 endpoint (https). Unpaid requests should get HTTP 402 with an x402 v2 challenge.
+      placeholder: https://api.example.com/v1/paid/signal
+    validations:
+      required: true
+  - type: dropdown
+    id: method
+    attributes:
+      label: Method
+      options: [GET, POST]
+    validations:
+      required: true
+  - type: textarea
+    id: body
+    attributes:
+      label: Example request body (POST only)
+      render: json
+  - type: input
+    id: price
+    attributes:
+      label: Price per call (USDC)
+      description: Up to 0.01.
+      placeholder: "0.002"
+    validations:
+      required: true
+  - type: input
+    id: payto
+    attributes:
+      label: payTo address
+      description: Obol pins this. If your challenge ever asks to be paid elsewhere, Obol refuses.
+      placeholder: 0x...
+    validations:
+      required: true
+  - type: checkboxes
+    id: rails
+    attributes:
+      label: Payment rails your endpoint offers on Arc mainnet (eip155:5042, Arc USDC)
+      options:
+        - label: exact (EIP-3009)
+        - label: Circle Gateway batched
+  - type: input
+    id: expect
+    attributes:
+      label: Fields a good response must contain (optional)
+      description: JSON keys that must be present and non-empty, comma-separated.
+      placeholder: price, timestamp
+  - type: input
+    id: contact
+    attributes:
+      label: Team / contact
+      description: Your project name and X or Discord handle, so we can credit you.
