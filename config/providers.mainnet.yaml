@@ -66,3 +66,85 @@ providers:
     pay_to: "0x33b37c6d7a98b58da3Ccb3F36A4b578053d0Ea74"
     expect: []
     tags: [arc-data, third-party, known-bad]
+
+  # ---- Added 2 Oct 2026 from Coinbase's public x402 Bazaar: sellers that accept Arc mainnet.
+  # Each 402 challenge was decoded live on 2 Oct 2026 (eip155:5042, Arc USDC, payTo as pinned).
+  # Requests use each seller's own Bazaar example input, so a failure is the seller's, not ours.
+
+  # ---- apexfaucet.xyz -- Arc on-chain analytics; offers exact + Gateway (Obol pays exact)
+  - id: apex-arc-gas
+    name: apexfaucet Arc gas costs
+    url: https://apexfaucet.xyz/api/x402/arc-gas
+    kind: arc-data
+    price_usdc: 0.004
+    price_usdc_max: 0.005
+    pay_to: "0xd334ab5151c624cada654854e2879903dc4217ed"
+    expect: [data]
+    tags: [arc-data, third-party, exact, bazaar]
+
+  - id: apex-arc-agent-watch
+    name: apexfaucet Arc agent watch
+    url: https://apexfaucet.xyz/api/x402/arc-agent-watch
+    kind: arc-data
+    price_usdc: 0.004
+    price_usdc_max: 0.005
+    pay_to: "0xd334ab5151c624cada654854e2879903dc4217ed"
+    expect: [data]
+    tags: [arc-data, third-party, exact, bazaar]
+
+  # ---- Anchor -- verifiable RNG signed by the treasury key; exact only
+  - id: anchor-roll
+    name: Anchor verifiable RNG
+    url: https://api.anchor-x402.com/v1/roll
+    method: POST
+    body: { count: 1, low: 1, high: 100, label: "obol-probe" }
+    kind: utility
+    price_usdc: 0.001
+    price_usdc_max: 0.0012
+    pay_to: "0x127462e296fAc1A7F5cF33bA57bB2f0FFf5cD0B6"
+    expect: [result, commitment]
+    tags: [utility, third-party, exact, bazaar]
+
+  # ---- open-pay.jp -- x402 smoke-test endpoint; Gateway only
+  - id: openpay-hello
+    name: open-pay.jp hello
+    url: https://open-pay.jp/api/paid/hello
+    kind: utility
+    price_usdc: 0.001
+    price_usdc_max: 0.0012
+    pay_to: "0x52d4901142e2B5680027da5EB47C86CB02a3cA81"
+    expect: [message]
+    tags: [utility, third-party, gateway, bazaar]
+
+  # ---- ip402 -- IP geolocation + ASN; Gateway only
+  - id: ip402-geo
+    name: ip402 IP geolocation
+    url: https://ip402.xyz/v1/geo?ip=8.8.8.8&lang=en
+    kind: data
+    price_usdc: 0.01
+    price_usdc_max: 0.01
+    pay_to: "0xEd617F79201248Df99909fBde4269b6EEAEE39B6"
+    expect: [geo, network]
+    tags: [data, third-party, gateway, bazaar]
+
+  # ---- corpusAI -- GPU capacity stress score; Gateway only
+  - id: corpus-capacity-stress
+    name: corpusAI GPU capacity stress
+    url: https://cloud.trycorpus.ai/v1/capacity/stress?gpu=H100%20SXM
+    kind: data
+    price_usdc: 0.01
+    price_usdc_max: 0.01
+    pay_to: "0x3f60008Dfd0EfC03F476D9B489D6C5B13B3eBF2C"
+    expect: [score]
+    tags: [data, third-party, gateway, bazaar]
+
+  # ---- SpendTheBits -- official proof-of-life resource; exact only
+  - id: stb-proof
+    name: SpendTheBits proof-of-life
+    url: https://x402.spendthebits.com/@stbclaudeprod/proof/
+    kind: utility
+    price_usdc: 0.01
+    price_usdc_max: 0.01
+    pay_to: "0xBe5cb96D1Bd2B4d5D5C0A1f16266cc0ba2849D30"
+    expect: []
+    tags: [utility, third-party, exact, bazaar]

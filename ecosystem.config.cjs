@@ -17,11 +17,11 @@ module.exports = {
       name: "obol-agent",
       cwd: "/mnt/c/Github/obol",
       script: "/mnt/c/Github/obol/.venv/bin/python",
-      args: "-m obol.cli run --live --budget 0.02 --max-calls 15 --providers config/providers.mainnet.yaml --out runs/latest.json",
+      args: "-m obol.cli run --live --budget 0.05 --max-calls 20 --providers config/providers.mainnet.yaml --out runs/latest.json",
       interpreter: "none",
       env: { PYTHONUNBUFFERED: "1", OBOL_SIDECAR_URL: "http://127.0.0.1:8401" },
       autorestart: false,
-      cron_restart: "17 */12 * * *",
+      cron_restart: "17 */6 * * *",
     },
   ],
 };
