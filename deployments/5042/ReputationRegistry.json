@@ -1,0 +1,41 @@
+{
+  "contract": "ReputationRegistry",
+  "version": "v2",
+  "fullyQualifiedName": "src/ReputationRegistry.sol:ReputationRegistry",
+  "chain": "Arc mainnet",
+  "chainId": 5042,
+  "address": "0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE",
+  "deployTx": "0xe66a6350a29a972da7579c1b13e3813d044c1ead15081bf842c18dd43b0ce174",
+  "deployBlock": 23432651,
+  "deployer": "0x4a36Df350507d974C882Ac89f402215340d67f55",
+  "erc8004AgentId": 345,
+  "compiler": {
+    "version": "0.8.30+commit.73712a01",
+    "evmVersion": "prague",
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "viaIR": false,
+    "bytecodeHash": "ipfs",
+    "remappings": [
+      "forge-std/=lib/forge-std/src/"
+    ]
+  },
+  "standardInput": "deployments/5042/ReputationRegistry.standard-input.json",
+  "verification": {
+    "sourcify": {
+      "match": "exact_match",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "verifiedAt": "2026-10-02T05:12:46Z",
+      "matchId": "54506301",
+      "url": "https://repo.sourcify.dev/5042/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE",
+      "api": "https://sourcify.dev/server/v2/contract/5042/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE"
+    }
+  },
+  "explorer": {
+    "tx": "https://explorer.arc.io/tx/0xe66a6350a29a972da7579c1b13e3813d044c1ead15081bf842c18dd43b0ce174",
+    "address": "https://explorer.arc.io/address/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE"
+  }
+}

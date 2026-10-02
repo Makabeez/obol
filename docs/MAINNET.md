@@ -80,6 +80,12 @@ cd $GH/obol && ./scripts/deploy_registry.sh obol-agent
 nano sidecar/.env        # REPUTATION_CONTRACT=<printed address>
 ```
 
+The script also verifies the source on Sourcify (chain 5042). The live registry is verified as an
+**exact match**: https://repo.sourcify.dev/5042/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE, and its
+deployment record (deploy tx, block, deployer, compiler settings, the exact standard JSON input) is
+committed in [`deployments/5042/`](../deployments/5042/). Explorer verification through the Blockscout API
+at explorer.arc.io is blocked by its bot protection; Sourcify is the canonical proof.
+
 ## 6. Fund the Gateway rail (for CRA AGENT)
 
 ```bash

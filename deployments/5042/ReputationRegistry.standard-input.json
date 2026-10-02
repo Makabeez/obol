@@ -1,0 +1,33 @@
+{
+  "language": "Solidity",
+  "sources": {
+    "src/ReputationRegistry.sol": {
+      "content": "// SPDX-License-Identifier: MIT\npragma solidity 0.8.30;\n\n/// @title ReputationRegistry (v2, Arc mainnet)\n/// @notice Public, on-chain record of how well paid x402 services actually deliver,\n///         written by the Obol buyer agent after it pays them in USDC on Arc.\n///         Every write carries an evidence reference (the settlement tx hash for\n///         EIP-3009 \"exact\" payments, or the Circle Gateway transfer id for batched\n///         payments) so anyone can check the score against a real payment.\n/// @dev    v2 changes vs the Lepton (testnet) version:\n///         - evidence ref on every write (hash stored, full string in the event)\n///         - provider URI stored on-chain, so readers need no off-chain mapping\n///         - updatedBlock stored, so a reader can fetch the exact write tx with a\n///           single-block eth_getLogs (no indexer, works under RPC range limits)\n///         - two-step ownership transfer\ncontract ReputationRegistry {\n    struct Record {\n        uint16 scoreBps; // delivered quality, 0..10000\n        uint64 calls; // paid calls the score is based on\n        uint64 updatedAt; // block timestamp of last write\n        uint64 updatedBlock; // block number of last write\n        bool retired; // Obol stopped buying: confidently not worth it\n        bytes32 evidenceHash; // keccak256(bytes(evidenceRef)) of the last write\n    }\n\n    uint16 public constant MAX_SCORE_BPS = 10_000;\n\n    address public owner;\n    address public pendingOwner;\n\n    mapping(bytes32 => Record) private _records;\n    mapping(bytes32 => string) private _uris;\n    mapping(bytes32 => bool) private _known;\n    bytes32[] private _providerIds;\n\n    event ReputationUpdated(bytes32 indexed providerId, uint16 scoreBps, uint64 calls, string evidenceRef);\n    event ProviderRetired(bytes32 indexed providerId, uint16 scoreBps, uint64 calls, string evidenceRef);\n    event ProviderDescribed(bytes32 indexed providerId, string uri);\n    event OwnershipTransferStarted(address indexed previousOwner, address indexed newOwner);\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\n\n    error NotOwner();\n    error NotPendingOwner();\n    error BadScore();\n    error ZeroProvider();\n    error RetiredProvider();\n\n    modifier onlyOwner() {\n        if (msg.sender != owner) revert NotOwner();\n        _;\n    }\n\n    constructor() {\n        owner = msg.sender;\n        emit OwnershipTransferred(address(0), msg.sender);\n    }\n\n    // ---------------------------------------------------------------- owner\n\n    function transferOwnership(address newOwner) external onlyOwner {\n        pendingOwner = newOwner;\n        emit OwnershipTransferStarted(owner, newOwner);\n    }\n\n    function acceptOwnership() external {\n        if (msg.sender != pendingOwner) revert NotPendingOwner();\n        emit OwnershipTransferred(owner, msg.sender);\n        owner = msg.sender;\n        pendingOwner = address(0);\n    }\n\n    // ---------------------------------------------------------------- writes\n\n    /// @notice Attach a human/agent-readable URI (the x402 endpoint) to a provider id.\n    function describe(bytes32 providerId, string calldata uri) external onlyOwner {\n        if (providerId == bytes32(0)) revert ZeroProvider();\n        _track(providerId);\n        _uris[providerId] = uri;\n        emit ProviderDescribed(providerId, uri);\n    }\n\n    /// @notice Record (or update) a provider's delivered-quality score.\n    function recordScore(bytes32 providerId, uint16 scoreBps, uint64 calls, string calldata evidenceRef)\n        external\n        onlyOwner\n    {\n        Record storage r = _write(providerId, scoreBps, calls, evidenceRef);\n        if (r.retired) revert RetiredProvider();\n        emit ReputationUpdated(providerId, scoreBps, calls, evidenceRef);\n    }\n\n    /// @notice Mark a provider retired: Obol is confident it isn't worth buying.\n    function retire(bytes32 providerId, uint16 scoreBps, uint64 calls, string calldata evidenceRef)\n        external\n        onlyOwner\n    {\n        Record storage r = _write(providerId, scoreBps, calls, evidenceRef);\n        r.retired = true;\n        emit ProviderRetired(providerId, scoreBps, calls, evidenceRef);\n    }\n\n    /// @notice Give a retired provider another chance (e.g. after it fixed its service).\n    function reinstate(bytes32 providerId) external onlyOwner {\n        _records[providerId].retired = false;\n    }\n\n    // ---------------------------------------------------------------- reads\n\n    function scoreOf(bytes32 providerId) external view returns (Record memory) {\n        return _records[providerId];\n    }\n\n    function uriOf(bytes32 providerId) external view returns (string memory) {\n        return _uris[providerId];\n    }\n\n    function providerCount() external view returns (uint256) {\n        return _providerIds.length;\n    }\n\n    function providerIdAt(uint256 i) external view returns (bytes32) {\n        return _providerIds[i];\n    }\n\n    // ---------------------------------------------------------------- internal\n\n    function _write(bytes32 providerId, uint16 scoreBps, uint64 calls, string calldata evidenceRef)\n        private\n        returns (Record storage r)\n    {\n        if (providerId == bytes32(0)) revert ZeroProvider();\n        if (scoreBps > MAX_SCORE_BPS) revert BadScore();\n        _track(providerId);\n        r = _records[providerId];\n        r.scoreBps = scoreBps;\n        r.calls = calls;\n        r.updatedAt = uint64(block.timestamp);\n        r.updatedBlock = uint64(block.number);\n        r.evidenceHash = keccak256(bytes(evidenceRef));\n    }\n\n    function _track(bytes32 providerId) private {\n        if (!_known[providerId]) {\n            _known[providerId] = true;\n            _providerIds.push(providerId);\n        }\n    }\n}\n"
+    }
+  },
+  "settings": {
+    "remappings": [
+      "forge-std/=lib/forge-std/src/"
+    ],
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "metadata": {
+      "useLiteralContent": false,
+      "bytecodeHash": "ipfs",
+      "appendCBOR": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "evm.deployedBytecode.object",
+          "metadata"
+        ]
+      }
+    },
+    "evmVersion": "prague",
+    "viaIR": false,
+    "libraries": {}
+  }
+}

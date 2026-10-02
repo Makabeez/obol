@@ -20,5 +20,9 @@ echo "REPUTATION_CONTRACT=$ADDR"
 echo "Explorer: https://explorer.arc.io/address/$ADDR"
 echo "Owner:    $(cast call "$ADDR" 'owner()(address)' --rpc-url "$RPC")"
 echo
-echo "Optional source verification (Blockscout API; may be blocked by the explorer's bot protection):"
-echo "  forge verify-contract $ADDR src/ReputationRegistry.sol:ReputationRegistry --verifier blockscout --verifier-url https://explorer.arc.io/api/"
+echo "Verifying source on Sourcify (chain 5042)..."
+forge verify-contract "$ADDR" src/ReputationRegistry.sol:ReputationRegistry \
+  --chain 5042 --verifier sourcify --watch \
+  || echo "Sourcify verification failed; retry the command above. Proof: https://repo.sourcify.dev/5042/$ADDR"
+echo "Sourcify: https://repo.sourcify.dev/5042/$ADDR"
+echo "Record it in deployments/5042/ (see deployments/5042/ReputationRegistry.json for the format)."

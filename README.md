@@ -10,6 +10,7 @@ An autonomous agent with a USDC budget that discovers paid services, pays each p
 
 [![Live on Arc mainnet](https://img.shields.io/badge/live-Arc%20mainnet-caa253?style=for-the-badge&labelColor=0c1c1a)](https://obol-arc.vercel.app)
 [![Reputation Contract](https://img.shields.io/badge/registry-Arc%20mainnet-4fb39a?style=for-the-badge&labelColor=0c1c1a)](https://explorer.arc.io/address/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE)
+[![Sourcify exact match](https://img.shields.io/badge/sourcify-exact%20match-4fb39a?style=for-the-badge&labelColor=0c1c1a)](https://repo.sourcify.dev/5042/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE)
 [![License](https://img.shields.io/badge/license-MIT-ece6d6?style=for-the-badge&labelColor=0c1c1a)](./LICENSE)
 [![Built on Arc](https://img.shields.io/badge/built%20on-Arc%20%C3%97%20Circle-c45a40?style=for-the-badge&labelColor=0c1c1a)](https://docs.arc.io)
 
@@ -30,8 +31,13 @@ An autonomous agent with a USDC budget that discovers paid services, pays each p
 |---|---|
 | Dashboard (reads the chain in your browser) | https://obol-arc.vercel.app |
 | ReputationRegistry v2 | [`0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE`](https://explorer.arc.io/address/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE) |
+| Source verified | [Sourcify, exact match](https://repo.sourcify.dev/5042/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE) (creation + runtime bytecode, metadata hash included) |
+| Deploy tx | [`0xe66a…e174`](https://explorer.arc.io/tx/0xe66a6350a29a972da7579c1b13e3813d044c1ead15081bf842c18dd43b0ce174), block 23,432,651, from the agent wallet |
+| Deployment record | [`deployments/5042/ReputationRegistry.json`](deployments/5042/ReputationRegistry.json) + the exact [compiler input](deployments/5042/ReputationRegistry.standard-input.json) |
 | Agent wallet | [`0x4a36Df350507d974C882Ac89f402215340d67f55`](https://explorer.arc.io/address/0x4a36Df350507d974C882Ac89f402215340d67f55) |
 | ERC-8004 identity | agent `#345` in the canonical IdentityRegistry `0x8004A169…a432` |
+
+Check it yourself: `curl -s https://sourcify.dev/server/v2/contract/5042/0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE` returns `"match":"exact_match"`. Or rebuild it: `cd contracts && forge build && diff <(forge inspect ReputationRegistry deployedBytecode) <(cast code 0xDCaf0CcB73fcd81b28099f27A784EA815FB630BE --rpc-url https://rpc.mainnet.arc.io)` prints nothing.
 
 Obol pays real third-party sellers on Arc mainnet:
 
